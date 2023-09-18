@@ -1,0 +1,19 @@
+<h1>Admin Interface for Week {{ week }}</h1>
+
+<form method="post">
+    {% for team in teams %}
+        <div>
+            <span>{{ team.name }}</span>
+            <select name="result_{{ team.id }}">
+                <option value="win" {% if existing_results.get(team.id) == 'win' %}selected{% endif %}>Win</option>
+                <option value="tie" {% if existing_results.get(team.id) == 'tie' %}selected{% endif %}>Tie</option>
+                <option value="lose" {% if existing_results.get(team.id) == 'lose' %}selected{% endif %}>Lose</option>
+                <option value="did_not_play" {% if existing_results.get(team.id) == 'did_not_play' %}selected{% endif %}>Did Not Play</option>
+            </select>
+        </div>
+    {% endfor %}
+    <input type="submit" value="Submit">
+</form>
+
+<br>
+<a href="{{ url_for('index') }}">Home</a>

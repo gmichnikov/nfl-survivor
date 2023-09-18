@@ -1,0 +1,36 @@
+<h1>Pick for Week {{ week }}</h1>
+
+<!-- Week Selector -->
+<!-- <form method="post">
+    <label for="week_selector">Select Week: </label>
+    <select id="week_selector" name="week_selector">
+        {% for week in future_weeks %}
+            <option value="{{ week }}" {% if week == selected_week %}selected{% endif %}>{{ week }}</option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Select Week">
+</form> -->
+
+<!-- Display all picks -->
+<h3>Your Picks:</h3>
+<ul>
+    {% for week, team in all_picks.items() %}
+        <li>Week {{ week }}: {{ team }}</li>
+    {% endfor %}
+</ul>
+
+<!-- {% if current_pick %}
+<p>You have previously picked {{ current_pick }} for this week.</p>
+{% endif %} -->
+
+<form method="post">
+    {{ form.hidden_tag() }}
+    {{ form.week.label }}<br>
+    {{ form.week() }}<br>
+    {{ form.team_choice.label }}<br>
+    {{ form.team_choice() }}<br>
+    {{ form.submit() }}
+</form>
+
+<a href="{{ url_for('index') }}">Home</a> | 
+<a href="{{ url_for('view_picks') }}">View All Picks</a>

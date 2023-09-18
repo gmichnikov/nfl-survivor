@@ -1,0 +1,44 @@
+.correct {
+    color: forestgreen;
+}
+
+.incorrect {
+    color: maroon;
+}
+
+.nopick {
+    color: grey;
+}
+
+/* Style for the table */
+.styled-table {
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 18px;
+    text-align: left;
+    /* width: 100%; */
+}
+
+/* Style for the table header row */
+.styled-table thead tr.header-row {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: center;
+}
+
+/* Style for the table body */
+.styled-table th,
+.styled-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+}
+
+/* Style for the first column */
+.styled-table .first-col {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.styled-table thead tr.header-row .first-col {
+    color: green;
+}

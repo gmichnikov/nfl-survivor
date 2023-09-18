@@ -1,0 +1,9 @@
+venv
+__pycache__
+pyvenv.cfg
+
+# Environment files
+.env
+
+# SQLite Database
+*.db

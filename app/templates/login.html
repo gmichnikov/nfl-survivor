@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+
+    <!-- Flash Messages: Above the Form -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.username.label }}<br>
+            {{ form.username() }}
+        </p>
+        <p>
+            {{ form.password.label }}<br>
+            {{ form.password() }}
+        </p>
+        <p>
+            {{ form.submit() }}
+        </p>
+    </form>
+    <br>
+    <a href="{{ url_for('index') }}">Home</a>
+
+</body>
+</html>
