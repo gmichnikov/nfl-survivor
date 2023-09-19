@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_migrate import Migrate
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -12,6 +13,7 @@ app.config.from_object('config')
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 from flask_login import LoginManager
 
