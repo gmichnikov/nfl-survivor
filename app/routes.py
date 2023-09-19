@@ -156,7 +156,7 @@ def view_picks():
     # Convert team IDs to names
     team_lookup = {team['id']: team['name'] for team in load_nfl_teams()}
     
-    for week in range(1, calculate_current_week()):
+    for week in range(3, calculate_current_week()):
         all_picks[week] = {}
         picks_for_week = Pick.query.filter_by(week=week).all()
 
