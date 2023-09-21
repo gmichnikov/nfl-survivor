@@ -248,3 +248,26 @@ def view_logs():
 
     logs = Logs.query.all()  # Replace with your own query if needed
     return render_template('view_logs.html', logs=logs)
+
+@app.route('/admin_view_picks', methods=['GET'])
+@login_required
+def admin_view_picks():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    current_week = calculate_current_week()
+    team_lookup = load_nfl_teams_as_dict()
+    
+    picks = db.session.query(User, Pick).outerjoin(Pick, (User.id == Pick.user_id) & (Pick.week == current_week)).all()
+
+    print("Team Lookup:", team_lookup)
+    print("Picks:", picks)
+
+    # Add this line in your route after loading team_lookup
+    print("Sample Pick:", picks[0] if picks else "No picks")
+
+    picks_with_names = [(user, team_lookup.get(pick.team, "Not Picked") if pick else "Not Picked") for user, pick in picks]
+    print("Picks with names:", picks_with_names)
+
+    return render_template('admin_view_picks.html', picks=picks_with_names, week=current_week)

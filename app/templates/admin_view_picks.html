@@ -1,0 +1,20 @@
+<h1>Current Week Picks (Week: {{ week }})</h1>
+<table>
+<thead>
+    <tr>
+    <th>Username</th>
+    <th>Pick</th>
+    </tr>
+</thead>
+<tbody>
+    {% for user, team_name in picks %}
+    <tr>
+        <td>{{ user.username }}</td>
+        <td>{{ team_name }}</td>
+    </tr>
+    {% endfor %}
+</tbody>
+</table>
+
+<br>
+<a href="{{ url_for('index') }}">Home</a>    

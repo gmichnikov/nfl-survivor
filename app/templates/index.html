@@ -22,7 +22,8 @@
     {% if logged_in and current_user.is_admin %}
         <a href="{{ url_for('admin') }}">Set results</a> |
         <a href="{{ url_for('admin_reset_password') }}">Reset Passwords</a> |
-        <a href="{{ url_for('view_logs') }}">View Logs</a>
+        <a href="{{ url_for('view_logs') }}">View Logs</a> |
+        <a href="{{ url_for('admin_view_picks') }}">Admin View Picks</a>
     {% endif %}
 
 </body>
