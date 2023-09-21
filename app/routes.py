@@ -1,9 +1,12 @@
 from flask import render_template, redirect, url_for, flash, request
 from app import app, db
-from app.models import User, Pick, WeeklyResult
+from app.models import User, Pick, WeeklyResult, Logs
 from flask_login import login_user, logout_user, login_required, current_user, LoginManager
 from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm
 from utils import load_nfl_teams, load_nfl_teams_as_pairs, is_past_deadline, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict
+from datetime import datetime
+import pytz
+
 
 @app.route('/')
 def index():
@@ -31,6 +34,19 @@ def register():
 
         db.session.add(new_user)
         db.session.commit()
+
+        # Log the registration action
+        eastern = pytz.timezone('US/Eastern')
+        log_time = datetime.now().astimezone(eastern)
+
+        new_log = Logs(timestamp=log_time,
+                      user_id=new_user.id,
+                      action_type="register",
+                      description=f"{new_user.username} registered")
+        
+        db.session.add(new_log)
+
+        db.session.commit()
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
@@ -54,7 +70,7 @@ login_manager.init_app(app)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
+# This sets the weekly results
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
 def admin():
@@ -85,6 +101,17 @@ def admin():
             pick.is_correct = is_pick_correct(pick.team, current_week)
         db.session.commit()
 
+        # Log the action of setting results
+        eastern = pytz.timezone('US/Eastern')
+        log_time = datetime.now().astimezone(eastern)
+        new_log = Logs(timestamp=log_time,
+                      user_id=current_user.id,
+                      action_type="set results",
+                      description=f"{current_user.username} set results for week {current_week}")
+
+        db.session.add(new_log)
+        db.session.commit()
+
         flash('Weekly results updated.')
         return redirect(url_for('view_picks'))
 
@@ -92,8 +119,6 @@ def admin():
     existing_results = {result.team: result.result for result in WeeklyResult.query.filter_by(week=current_week)}
 
     return render_template('admin.html', teams=teams, week=current_week, existing_results=existing_results)
-
-    # return render_template('admin.html', teams=teams, week=current_week)
 
 @app.route('/pick', methods=['GET', 'POST'])
 @login_required
@@ -137,13 +162,22 @@ def pick():
             new_pick = Pick(user_id=current_user.id, week=int(form.week.data), team=form.team_choice.data)
             db.session.add(new_pick)
 
+        # Log the pick action
+        eastern = pytz.timezone('US/Eastern')
+        log_time = datetime.now().astimezone(eastern)
+        team_name = dict(available_teams).get(form.team_choice.data)
+        
+        new_log = Logs(timestamp=log_time,
+                      user_id=current_user.id,
+                      action_type="pick",
+                      description=f"{current_user.username} picked {team_name}")
+        
+        db.session.add(new_log)
+
         db.session.commit()
         flash('Your pick has been submitted.')
         return redirect(url_for('pick'))
 
-    # return render_template('pick.html', form=form, week=current_week)
-    # return render_template('pick.html', form=form, current_pick=current_pick_team)
-    # return render_template('pick.html', form=form, future_weeks=future_weeks, all_picks=picked_teams_map)
     return render_template('pick.html', form=form, future_weeks=future_weeks, all_picks=picked_team_names, selected_week=selected_week)
 
 @app.route('/view_picks', methods=['GET'])
@@ -187,8 +221,30 @@ def admin_reset_password():
         if user:
             user.set_password(form.new_password.data)
             db.session.commit()
+
+            # Log the password reset action
+            eastern = pytz.timezone('US/Eastern')
+            log_time = datetime.now().astimezone(eastern)
+            new_log = Logs(timestamp=log_time,
+                          user_id=current_user.id,
+                          action_type="password reset",
+                          description=f"{current_user.username} reset the password for {user.username}")
+
+            db.session.add(new_log)
+            db.session.commit()
+
             flash('Password reset successfully.')
         else:
             flash('User not found.')
 
     return render_template('admin_reset_password.html', form=form)
+
+@app.route('/view_logs')
+@login_required
+def view_logs():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    logs = Logs.query.all()  # Replace with your own query if needed
+    return render_template('view_logs.html', logs=logs)

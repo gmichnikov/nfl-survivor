@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Home</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    </head>
+    <body>
+        <h1>Logs</h1>
+        <table class="styled-table">
+            <thead>
+            <tr class="header-row">
+                <th>Timestamp</th>
+                <th>User ID</th>
+                <th>Action</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for log in logs %}
+                <tr>
+                <td>{{ log.timestamp }}</td>
+                <td>{{ log.user_id }}</td>
+                <td>{{ log.action_type }}</td>
+                <td>{{ log.description }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </body>
+</html>

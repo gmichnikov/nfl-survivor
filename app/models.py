@@ -1,5 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+from datetime import datetime
+from pytz import timezone
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 
 from app import db
 
@@ -29,3 +32,11 @@ class WeeklyResult(db.Model):
     week = db.Column(db.Integer)
     team = db.Column(db.String(64))
     result = db.Column(db.String(64))  # Can be 'win', 'lose', 'tie', 'did not play'
+
+
+class Logs(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.now(timezone('US/Eastern')))
+    user_id = db.Column(db.Integer, ForeignKey('user.id'))
+    action_type = db.Column(db.String(50))
+    description = db.Column(db.String(200))
