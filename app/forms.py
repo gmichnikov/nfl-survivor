@@ -29,3 +29,9 @@ class AdminPasswordResetForm(FlaskForm):
     username = SelectField('Select User', choices=[])  # Choices will be populated in the route
     new_password = PasswordField('New Password', validators=[DataRequired()])
     submit = SubmitField('Reset Password')
+
+class AdminSetPickForm(FlaskForm):
+    username = SelectField('Username', choices=[])  # Populate this dynamically
+    week = SelectField('Week', choices=[(str(i), str(i)) for i in range(1, 18)])
+    team = SelectField('Team', choices=[])  # Populate this dynamically
+    submit = SubmitField('Set Pick')

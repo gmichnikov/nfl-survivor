@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request
 from app import app, db
 from app.models import User, Pick, WeeklyResult, Logs
 from flask_login import login_user, logout_user, login_required, current_user, LoginManager
-from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm
+from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm, AdminSetPickForm
 from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict
 from datetime import datetime
 import pytz
@@ -271,3 +271,56 @@ def admin_view_picks():
     print("Picks with names:", picks_with_names)
 
     return render_template('admin_view_picks.html', picks=picks_with_names, week=current_week)
+
+
+@app.route('/admin_set_pick', methods=['GET', 'POST'])
+@login_required
+def admin_set_pick():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    form = AdminSetPickForm()
+    form.username.choices = [(user.username, user.username) for user in User.query.all()]
+    form.team.choices = load_nfl_teams_as_pairs()
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        existing_pick = Pick.query.filter_by(user_id=user.id, week=int(form.week.data)).first()
+        
+        if existing_pick:
+            existing_pick.team = form.team.data
+        else:
+            new_pick = Pick(user_id=user.id, week=int(form.week.data), team=form.team.data)
+            db.session.add(new_pick)
+
+        db.session.commit()
+
+        # Log the action
+        # log_entry = Logs(
+        #     timestamp=datetime.now(pytz.timezone('US/Eastern')),
+        #     user_id=current_user.id,
+        #     action_type="admin set pick",
+        #     description=f"{current_user.username} set pick for {user.username} in week {form.week.data}: {form.team.data}"
+        # )
+        # db.session.add(log_entry)
+        # db.session.commit()
+
+        # Inside if form.validate_on_submit():
+        team_lookup = load_nfl_teams_as_dict()
+        team_name = team_lookup.get(form.team.data, "Unknown Team")
+
+        # Log the action
+        log_entry = Logs(
+            timestamp=datetime.now(pytz.timezone('US/Eastern')),
+            user_id=current_user.id,
+            action_type="admin set pick",
+            description=f"{current_user.username} set pick for {user.username} in week {form.week.data}: {team_name}"
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+
+        flash('Pick set successfully.')
+        return redirect(url_for('admin_set_pick'))
+
+    return render_template('admin_set_pick.html', form=form)
