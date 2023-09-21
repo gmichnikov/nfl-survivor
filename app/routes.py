@@ -3,7 +3,7 @@ from app import app, db
 from app.models import User, Pick, WeeklyResult, Logs
 from flask_login import login_user, logout_user, login_required, current_user, LoginManager
 from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm
-from utils import load_nfl_teams, load_nfl_teams_as_pairs, is_past_deadline, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict
+from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict
 from datetime import datetime
 import pytz
 
