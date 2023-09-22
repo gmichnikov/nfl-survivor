@@ -6,10 +6,37 @@ from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPassw
 from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict
 from datetime import datetime
 import pytz
+import requests
+import os
 
 
 @app.route('/')
 def index():
+
+    # temporarily print odds when accessing /index
+    odds_response = requests.get(f'https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds', params={
+        'api_key': os.environ.get('ODDS_API_KEY'),
+        'bookmakers': 'draftkings,fanduel',
+        'markets': 'spreads',
+        'oddsFormat': 'american',
+        'dateFormat': 'unix',
+        'commenceTimeFrom': '2023-09-21T00:00:00Z',
+        'commenceTimeTo': '2023-09-28T00:00:00Z'
+    })
+
+    if odds_response.status_code != 200:
+        print(f'Failed to get odds: status_code {odds_response.status_code}, response body {odds_response.text}')
+
+    else:
+        odds_json = odds_response.json()
+        print('Number of events:', len(odds_json))
+        print(odds_json)
+
+        # Check the usage quota
+        print('Remaining requests', odds_response.headers['x-requests-remaining'])
+        print('Used requests', odds_response.headers['x-requests-used'])
+
+
     # Check if a user is logged in
     if current_user.is_authenticated:
         username = current_user.username
