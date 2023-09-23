@@ -8,13 +8,13 @@
 <h1>Spreads for Week {{ current_week }}</h1>
 
 {% if last_updated_time %}
-<p>Last updated at: {{ last_updated_time.strftime("%Y-%m-%d %I:%M %p %Z") }} ET</p>
+<p>Last updated at: {{ last_updated_time.strftime("%Y-%m-%d %I:%M %p %Z") }}</p>
 {% endif %}
 
 <ul>
     {% for spread in spreads %}
     <li>
-        {{ spread.game_time.strftime("%Y-%m-%d %I:%M %p %Z") }} ET:
+        {{ spread.game_time.strftime("%Y-%m-%d %I:%M %p %Z") }}:
         {{ spread.road_team }}
         {% if spread.road_team_spread <= 0 %} ({{ spread.road_team_spread }}){% endif %}
         @

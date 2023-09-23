@@ -18,7 +18,7 @@
             <tbody>
             {% for log in logs %}
                 <tr>
-                <td>{{ log.timestamp.strftime("%Y-%m-%d %I:%M %p %Z") }} ET</td>
+                <td>{{ log.timestamp.strftime("%Y-%m-%d %I:%M %p %Z") }}</td>
                 <td>{{ log.user_id }}</td>
                 <td>{{ log.action_type }}</td>
                 <td>{{ log.description }}</td>

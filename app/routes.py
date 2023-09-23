@@ -6,6 +6,7 @@ from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPassw
 from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict
 from datetime import datetime
 import pytz
+from pytz import timezone
 import requests
 import os
 
@@ -38,7 +39,7 @@ def register():
 
         # Log the registration action
         eastern = pytz.timezone('US/Eastern')
-        log_time = datetime.now().astimezone(eastern)
+        log_time = datetime.now().astimezone(pytz.utc)
 
         new_log = Logs(timestamp=log_time,
                       user_id=new_user.id,
@@ -104,7 +105,7 @@ def admin():
 
         # Log the action of setting results
         eastern = pytz.timezone('US/Eastern')
-        log_time = datetime.now().astimezone(eastern)
+        log_time = datetime.now().astimezone(pytz.utc)
         new_log = Logs(timestamp=log_time,
                       user_id=current_user.id,
                       action_type="set results",
@@ -146,8 +147,6 @@ def pick():
     picked_team_names = {week: team_lookup.get(team_id, team_id) for week, team_id in picked_teams_for_list.items()}
     selected_week = int(request.form.get('week_selector', current_week))
 
-    print("Selected week is " + str(selected_week))
-
     available_teams = [(team_id, team_name) for (team_id, team_name) in load_nfl_teams_as_pairs() if team_id not in picked_teams]
 
     form = TeamSelectionForm()
@@ -165,7 +164,7 @@ def pick():
 
         # Log the pick action
         eastern = pytz.timezone('US/Eastern')
-        log_time = datetime.now().astimezone(eastern)
+        log_time = datetime.now().astimezone(pytz.utc)
         team_name = dict(available_teams).get(form.team_choice.data)
         
         new_log = Logs(timestamp=log_time,
@@ -179,8 +178,14 @@ def pick():
         flash('Your pick has been submitted.')
         return redirect(url_for('pick'))
 
+    eastern = pytz.timezone('US/Eastern')
+    utc = timezone('UTC')
     spreads = Spread.query.filter_by(week=current_week).order_by(Spread.game_time).all()
+    for spread in spreads:
+        spread.game_time = utc.localize(spread.game_time).astimezone(eastern)
+
     last_updated_time = db.session.query(db.func.max(Spread.update_time)).filter_by(week=current_week).first()[0]
+    last_updated_time = utc.localize(last_updated_time).astimezone(eastern)
  
     return render_template('pick.html', form=form, future_weeks=future_weeks, all_picks=picked_team_names, selected_week=selected_week, spreads=spreads, last_updated_time=last_updated_time, current_week=current_week)
 
@@ -228,7 +233,7 @@ def admin_reset_password():
 
             # Log the password reset action
             eastern = pytz.timezone('US/Eastern')
-            log_time = datetime.now().astimezone(eastern)
+            log_time = datetime.now().astimezone(pytz.utc)
             new_log = Logs(timestamp=log_time,
                           user_id=current_user.id,
                           action_type="password reset",
@@ -250,7 +255,12 @@ def view_logs():
         flash('You do not have permission to access this page.')
         return redirect(url_for('index'))
 
-    logs = Logs.query.all()  # Replace with your own query if needed
+    eastern = pytz.timezone('US/Eastern')
+    utc = timezone('UTC')
+
+    logs = Logs.query.all()
+    for log in logs:
+        log.timestamp = utc.localize(log.timestamp).astimezone(eastern)
     return render_template('view_logs.html', logs=logs)
 
 @app.route('/admin_view_picks', methods=['GET'])
@@ -305,7 +315,7 @@ def admin_set_pick():
 
         # Log the action
         log_entry = Logs(
-            timestamp=datetime.now(pytz.timezone('US/Eastern')),
+            timestamp=datetime.now().astimezone(pytz.utc),
             user_id=current_user.id,
             action_type="admin set pick",
             description=f"{current_user.username} set pick for {user.username} in week {form.week.data}: {team_name}"
@@ -348,8 +358,7 @@ def fetch_spreads():
         home_team = game['home_team']
         away_team = game['away_team']
         
-        game_time = datetime.fromtimestamp(game_time_epoch, pytz.timezone('UTC'))
-        game_time = game_time.astimezone(pytz.timezone('US/Eastern'))
+        game_time_utc = datetime.fromtimestamp(game_time_epoch, pytz.utc)
 
         draftkings_data = None
         fanduel_data = None
@@ -368,8 +377,8 @@ def fetch_spreads():
         existing_entry = Spread.query.filter_by(odds_id=odds_id).first()
         if existing_entry:
             # Update existing fields
-            existing_entry.update_time = datetime.now(pytz.timezone('US/Eastern'))
-            existing_entry.game_time = game_time
+            existing_entry.update_time = datetime.now().astimezone(pytz.utc)
+            existing_entry.game_time = game_time_utc
             existing_entry.home_team = home_team
             existing_entry.road_team = away_team
             existing_entry.week = calculate_current_week()
@@ -382,8 +391,8 @@ def fetch_spreads():
             # Create new Spreads object and populate fields
             new_spread = Spread(
                 odds_id=odds_id,
-                update_time=datetime.now(pytz.timezone('US/Eastern')),
-                game_time=game_time,
+                update_time=datetime.now().astimezone(pytz.utc),
+                game_time=game_time_utc,
                 home_team=home_team,
                 road_team=away_team,
                 week=calculate_current_week()
@@ -405,7 +414,7 @@ def fetch_spreads():
 
     eastern = pytz.timezone('US/Eastern')
     log_entry = Logs(
-        timestamp=datetime.now(eastern),
+        timestamp=datetime.now().astimezone(pytz.utc),
         user_id=current_user.id,
         action_type="fetch_spreads",
         description=f"{current_user.username} fetched spreads for week {current_week}"
@@ -416,8 +425,13 @@ def fetch_spreads():
     remaining_requests = odds_response.headers['x-requests-remaining']
     used_requests = odds_response.headers['x-requests-used']
 
+    utc = timezone('UTC')
     spreads = Spread.query.filter_by(week=current_week).order_by(Spread.game_time).all()
+    for spread in spreads:
+        spread.game_time = utc.localize(spread.game_time).astimezone(eastern)
+
     last_updated_time = db.session.query(db.func.max(Spread.update_time)).filter_by(week=current_week).first()[0]
+    last_updated_time = utc.localize(last_updated_time).astimezone(eastern)
 
     return render_template('fetch_spreads.html', 
                            spreads=spreads, 
