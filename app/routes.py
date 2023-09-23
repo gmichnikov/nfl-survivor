@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request
 from app import app, db
-from app.models import User, Pick, WeeklyResult, Logs
+from app.models import User, Pick, WeeklyResult, Logs, Spread
 from flask_login import login_user, logout_user, login_required, current_user, LoginManager
 from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm, AdminSetPickForm
 from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict
@@ -12,32 +12,6 @@ import os
 
 @app.route('/')
 def index():
-
-    # temporarily print odds when accessing /index
-    odds_response = requests.get(f'https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds', params={
-        'api_key': os.environ.get('ODDS_API_KEY'),
-        'bookmakers': 'draftkings,fanduel',
-        'markets': 'spreads',
-        'oddsFormat': 'american',
-        'dateFormat': 'unix',
-        'commenceTimeFrom': '2023-09-21T00:00:00Z',
-        'commenceTimeTo': '2023-09-28T00:00:00Z'
-    })
-
-    if odds_response.status_code != 200:
-        print(f'Failed to get odds: status_code {odds_response.status_code}, response body {odds_response.text}')
-
-    else:
-        odds_json = odds_response.json()
-        print('Number of events:', len(odds_json))
-        print(odds_json)
-
-        # Check the usage quota
-        print('Remaining requests', odds_response.headers['x-requests-remaining'])
-        print('Used requests', odds_response.headers['x-requests-used'])
-
-
-    # Check if a user is logged in
     if current_user.is_authenticated:
         username = current_user.username
         return render_template('index.html', logged_in=True, username=username)
@@ -205,7 +179,10 @@ def pick():
         flash('Your pick has been submitted.')
         return redirect(url_for('pick'))
 
-    return render_template('pick.html', form=form, future_weeks=future_weeks, all_picks=picked_team_names, selected_week=selected_week)
+    spreads = Spread.query.filter_by(week=current_week).order_by(Spread.game_time).all()
+    last_updated_time = db.session.query(db.func.max(Spread.update_time)).filter_by(week=current_week).first()[0]
+ 
+    return render_template('pick.html', form=form, future_weeks=future_weeks, all_picks=picked_team_names, selected_week=selected_week, spreads=spreads, last_updated_time=last_updated_time, current_week=current_week)
 
 @app.route('/view_picks', methods=['GET'])
 @login_required
@@ -323,17 +300,6 @@ def admin_set_pick():
 
         db.session.commit()
 
-        # Log the action
-        # log_entry = Logs(
-        #     timestamp=datetime.now(pytz.timezone('US/Eastern')),
-        #     user_id=current_user.id,
-        #     action_type="admin set pick",
-        #     description=f"{current_user.username} set pick for {user.username} in week {form.week.data}: {form.team.data}"
-        # )
-        # db.session.add(log_entry)
-        # db.session.commit()
-
-        # Inside if form.validate_on_submit():
         team_lookup = load_nfl_teams_as_dict()
         team_name = team_lookup.get(form.team.data, "Unknown Team")
 
@@ -351,3 +317,111 @@ def admin_set_pick():
         return redirect(url_for('admin_set_pick'))
 
     return render_template('admin_set_pick.html', form=form)
+
+@app.route('/fetch_spreads', methods=['GET'])
+@login_required
+def fetch_spreads():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    # Your API call code here
+    odds_response = requests.get(f'https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds', params={
+        'api_key': os.environ.get('ODDS_API_KEY'),
+        'bookmakers': 'draftkings,fanduel',
+        'markets': 'spreads',
+        'oddsFormat': 'american',
+        'dateFormat': 'unix',
+        'commenceTimeFrom': '2023-09-21T00:00:00Z',
+        'commenceTimeTo': '2023-09-28T00:00:00Z'
+    })
+
+
+    if odds_response.status_code != 200:
+        flash(f'Failed to get odds: status_code {odds_response.status_code}, response body {odds_response.text}')
+        return redirect(url_for('index'))
+
+    odds_json = odds_response.json()
+    for game in odds_json:
+        odds_id = game['id']
+        game_time_epoch = game['commence_time']
+        home_team = game['home_team']
+        away_team = game['away_team']
+        
+        game_time = datetime.fromtimestamp(game_time_epoch, pytz.timezone('UTC'))
+        game_time = game_time.astimezone(pytz.timezone('US/Eastern'))
+
+        draftkings_data = None
+        fanduel_data = None
+        
+        for bookmaker in game['bookmakers']:
+            if bookmaker['key'] == 'draftkings':
+                draftkings_data = bookmaker
+            elif bookmaker['key'] == 'fanduel':
+                fanduel_data = bookmaker
+
+        spread_data = draftkings_data if draftkings_data else fanduel_data
+
+        if not spread_data:
+            continue  # Skip this game if neither exists
+
+        existing_entry = Spread.query.filter_by(odds_id=odds_id).first()
+        if existing_entry:
+            # Update existing fields
+            existing_entry.update_time = datetime.now(pytz.timezone('US/Eastern'))
+            existing_entry.game_time = game_time
+            existing_entry.home_team = home_team
+            existing_entry.road_team = away_team
+            existing_entry.week = calculate_current_week()
+            for outcome in spread_data['markets'][0]['outcomes']:
+                if outcome['name'] == home_team:
+                    existing_entry.home_team_spread = outcome['point']
+                elif outcome['name'] == away_team:
+                    existing_entry.road_team_spread = outcome['point']
+        else:
+            # Create new Spreads object and populate fields
+            new_spread = Spread(
+                odds_id=odds_id,
+                update_time=datetime.now(pytz.timezone('US/Eastern')),
+                game_time=game_time,
+                home_team=home_team,
+                road_team=away_team,
+                week=calculate_current_week()
+            )
+
+            # Populate home_team_spread and road_team_spread
+            for outcome in spread_data['markets'][0]['outcomes']:
+                if outcome['name'] == home_team:
+                    new_spread.home_team_spread = outcome['point']
+                elif outcome['name'] == away_team:
+                    new_spread.road_team_spread = outcome['point']
+
+            # Add new record to the session
+            db.session.add(new_spread)
+
+        db.session.commit()
+
+    current_week = calculate_current_week()
+
+    eastern = pytz.timezone('US/Eastern')
+    log_entry = Logs(
+        timestamp=datetime.now(eastern),
+        user_id=current_user.id,
+        action_type="fetch_spreads",
+        description=f"{current_user.username} fetched spreads for week {current_week}"
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
+    remaining_requests = odds_response.headers['x-requests-remaining']
+    used_requests = odds_response.headers['x-requests-used']
+
+    spreads = Spread.query.filter_by(week=current_week).order_by(Spread.game_time).all()
+    last_updated_time = db.session.query(db.func.max(Spread.update_time)).filter_by(week=current_week).first()[0]
+
+    return render_template('fetch_spreads.html', 
+                           spreads=spreads, 
+                           last_updated_time=last_updated_time, 
+                           current_week=current_week, 
+                           remaining_requests=remaining_requests, 
+                           used_requests=used_requests)

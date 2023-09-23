@@ -40,3 +40,14 @@ class Logs(db.Model):
     user_id = db.Column(db.Integer, ForeignKey('user.id'))
     action_type = db.Column(db.String(50))
     description = db.Column(db.String(200))
+
+class Spread(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    odds_id = db.Column(db.String(50), unique=True, nullable=False)
+    update_time = db.Column(db.DateTime, nullable=False)
+    game_time = db.Column(db.DateTime, nullable=False)
+    home_team = db.Column(db.String(50), nullable=False)
+    road_team = db.Column(db.String(50), nullable=False)
+    home_team_spread = db.Column(db.Float, nullable=False)
+    road_team_spread = db.Column(db.Float, nullable=False)
+    week = db.Column(db.Integer, nullable=False)

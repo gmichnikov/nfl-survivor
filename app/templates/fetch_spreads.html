@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fetch Spreads</title>
+</head>
+<body>
+
+<h1>Spreads for Week {{ current_week }}</h1>
+
+{% if last_updated_time %}
+<p>Last updated at: {{ last_updated_time.strftime("%Y-%m-%d %I:%M %p %Z") }} ET</p>
+{% endif %}
+
+<ul>
+    {% for spread in spreads %}
+    <li>
+        {{ spread.game_time.strftime("%Y-%m-%d %I:%M %p %Z") }} ET:
+        {{ spread.road_team }}
+        {% if spread.road_team_spread <= 0 %} ({{ spread.road_team_spread }}){% endif %}
+        @
+        {{ spread.home_team }}
+        {% if spread.home_team_spread <= 0 %} ({{ spread.home_team_spread }}){% endif %}
+    </li>
+    {% endfor %}
+</ul>
+
+<p>Remaining Requests: {{ remaining_requests }}</p>
+<p>Used Requests: {{ used_requests }}</p>
+
+<br>
+<a href="{{ url_for('index') }}">Home</a>
+
+
+</body>
+</html>
