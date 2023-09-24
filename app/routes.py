@@ -3,7 +3,7 @@ from app import app, db
 from app.models import User, Pick, WeeklyResult, Logs, Spread
 from flask_login import login_user, logout_user, login_required, current_user, LoginManager
 from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm, AdminSetPickForm
-from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict
+from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict, calculate_game_week
 from datetime import datetime, timedelta
 import pytz
 from pytz import timezone
@@ -177,11 +177,20 @@ def pick():
 
     eastern = pytz.timezone('US/Eastern')
     utc = timezone('UTC')
-    spreads = Spread.query.filter_by(week=current_week).order_by(Spread.game_time).all()
+
+    current_time_utc = datetime.now(pytz.utc)
+    time_24_hours_ago = current_time_utc - timedelta(hours=24)
+
+    spreads = Spread.query.filter(Spread.game_time > time_24_hours_ago).order_by(Spread.game_time).all()
+    # spreads = Spread.query.filter_by(week=current_week).order_by(Spread.game_time).all()
     for spread in spreads:
         spread.game_time = utc.localize(spread.game_time).astimezone(eastern)
 
     last_updated_time = db.session.query(db.func.max(Spread.update_time)).filter_by(week=current_week).first()[0]
+    if last_updated_time is None:
+        max_week = db.session.query(db.func.max(Spread.week)).scalar()
+        last_updated_time = db.session.query(db.func.max(Spread.update_time)).filter_by(week=max_week).first()[0]
+
     last_updated_time = utc.localize(last_updated_time).astimezone(eastern)
  
     return render_template('pick.html', form=form, future_weeks=future_weeks, all_picks=picked_team_names, selected_week=selected_week, spreads=spreads, last_updated_time=last_updated_time, current_week=current_week)
@@ -335,8 +344,10 @@ def fetch_spreads():
     first_week_start_date = datetime(2023, 9, 7)
     current_week = calculate_current_week()
     days_shift = (current_week - 1) * 7
-    commenceTimeFrom = first_week_start_date + timedelta(days=days_shift)
-    commenceTimeTo = commenceTimeFrom + timedelta(days=7)
+    commenceTimeFrom = datetime.now().astimezone(pytz.utc)
+    current_week_sunday = first_week_start_date + timedelta(days=days_shift)
+    commenceTimeTo = current_week_sunday + timedelta(days=7)
+
     commenceTimeFrom_str = commenceTimeFrom.strftime('%Y-%m-%dT%H:%M:%SZ')
     commenceTimeTo_str = commenceTimeTo.strftime('%Y-%m-%dT%H:%M:%SZ')
 
@@ -386,7 +397,7 @@ def fetch_spreads():
             existing_entry.game_time = game_time_utc
             existing_entry.home_team = home_team
             existing_entry.road_team = away_team
-            existing_entry.week = calculate_current_week()
+            existing_entry.week = calculate_game_week(game_time_utc)
             for outcome in spread_data['markets'][0]['outcomes']:
                 if outcome['name'] == home_team:
                     existing_entry.home_team_spread = outcome['point']
@@ -400,7 +411,7 @@ def fetch_spreads():
                 game_time=game_time_utc,
                 home_team=home_team,
                 road_team=away_team,
-                week=calculate_current_week()
+                week=calculate_game_week(game_time_utc)
             )
 
             # Populate home_team_spread and road_team_spread
@@ -431,11 +442,20 @@ def fetch_spreads():
     used_requests = odds_response.headers['x-requests-used']
 
     utc = timezone('UTC')
-    spreads = Spread.query.filter_by(week=current_week).order_by(Spread.game_time).all()
+
+    current_time_utc = datetime.now(pytz.utc)
+    time_24_hours_ago = current_time_utc - timedelta(hours=24)
+
+    spreads = Spread.query.filter(Spread.game_time > time_24_hours_ago).order_by(Spread.game_time).all()
+    # spreads = Spread.query.filter_by(week=current_week).order_by(Spread.game_time).all()
     for spread in spreads:
         spread.game_time = utc.localize(spread.game_time).astimezone(eastern)
 
     last_updated_time = db.session.query(db.func.max(Spread.update_time)).filter_by(week=current_week).first()[0]
+    if last_updated_time is None:
+        max_week = db.session.query(db.func.max(Spread.week)).scalar()
+        last_updated_time = db.session.query(db.func.max(Spread.update_time)).filter_by(week=max_week).first()[0]
+
     last_updated_time = utc.localize(last_updated_time).astimezone(eastern)
 
     return render_template('fetch_spreads.html', 

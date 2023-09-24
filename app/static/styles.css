@@ -4,6 +4,7 @@
 
 .incorrect {
     color: maroon;
+    text-decoration: line-through;
 }
 
 .nopick {

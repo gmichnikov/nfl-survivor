@@ -18,13 +18,32 @@ def calculate_current_week():
     eastern = pytz.timezone('US/Eastern')
     first_week_deadline = datetime(2023, 9, 10, 13, 0).astimezone(eastern)
     now = datetime.now().astimezone(eastern)
+    print("first week deadline: " + str(first_week_deadline))
+    print("now: " + str(now))
+
+    # datetime.now().astimezone(pytz.utc) maybe try this
     # now = datetime(2024, 9, 2, 20, 0).astimezone(eastern) #fake
 
     if now < first_week_deadline:
         return 1
 
     result = 2 + ((now - first_week_deadline).days // 7)
+    print("Week is " + str(result))
     return result
+
+def calculate_game_week(game_time_utc):
+    # Define the cutoff date for week 1 in UTC timezone
+    week_one_cutoff = datetime(2023, 9, 12, tzinfo=pytz.utc)
+    
+    # Check if the game is before the cutoff for week 1
+    if game_time_utc < week_one_cutoff:
+        return 1
+    
+    # Calculate the week number for games after week 1
+    delta_days = (game_time_utc - week_one_cutoff).days
+    week_number = 2 + (delta_days // 7)
+    
+    return week_number
 
 def is_pick_correct(user_pick, week):
     weekly_result = WeeklyResult.query.filter_by(week=week, team=user_pick).first()
