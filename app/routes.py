@@ -4,7 +4,7 @@ from app.models import User, Pick, WeeklyResult, Logs, Spread
 from flask_login import login_user, logout_user, login_required, current_user, LoginManager
 from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm, AdminSetPickForm
 from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from pytz import timezone
 import requests
@@ -332,6 +332,14 @@ def fetch_spreads():
         flash('You do not have permission to access this page.')
         return redirect(url_for('index'))
 
+    first_week_start_date = datetime(2023, 9, 7)
+    current_week = calculate_current_week()
+    days_shift = (current_week - 1) * 7
+    commenceTimeFrom = first_week_start_date + timedelta(days=days_shift)
+    commenceTimeTo = commenceTimeFrom + timedelta(days=7)
+    commenceTimeFrom_str = commenceTimeFrom.strftime('%Y-%m-%dT%H:%M:%SZ')
+    commenceTimeTo_str = commenceTimeTo.strftime('%Y-%m-%dT%H:%M:%SZ')
+
     # Your API call code here
     odds_response = requests.get(f'https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds', params={
         'api_key': os.environ.get('ODDS_API_KEY'),
@@ -339,8 +347,8 @@ def fetch_spreads():
         'markets': 'spreads',
         'oddsFormat': 'american',
         'dateFormat': 'unix',
-        'commenceTimeFrom': '2023-09-21T00:00:00Z',
-        'commenceTimeTo': '2023-09-28T00:00:00Z'
+        'commenceTimeFrom': commenceTimeFrom_str,
+        'commenceTimeTo': commenceTimeTo_str
     })
 
 
