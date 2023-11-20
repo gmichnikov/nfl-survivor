@@ -9,6 +9,7 @@ import pytz
 from pytz import timezone
 import requests
 import os
+import json
 
 
 @app.route('/')
@@ -78,7 +79,6 @@ def admin():
         return redirect(url_for('index'))
 
     teams = load_nfl_teams()
-    # current_week = 1  # Replace with logic to determine the current week
     current_week = calculate_current_week() - 1
 
     if request.method == 'POST':
@@ -464,3 +464,87 @@ def fetch_spreads():
                            current_week=current_week, 
                            remaining_requests=remaining_requests, 
                            used_requests=used_requests)
+
+@app.route('/auto-update', methods=['GET', 'POST'])
+@login_required
+def auto_update():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        week_number = request.form.get('week_number')
+        if week_number:
+            try:
+                week_number = int(week_number)
+                # Fetch scores from the API
+                results = fetch_results_for_week(week_number)
+                # Process and update the database
+                update_weekly_results(week_number, results)
+                flash('Weekly results updated for week ' + str(week_number))
+            except ValueError:
+                flash('Invalid week number')
+            except Exception as e:
+                flash('Error updating results: ' + str(e))
+
+        return redirect(url_for('auto_update'))
+
+    return render_template('auto_update.html')
+
+def update_weekly_results(week, results):
+    team_name_to_id = map_team_names_to_ids()
+
+    for team_name, result in results.items():
+        team_id = team_name_to_id.get(team_name)
+        print("team id: " + team_id)
+
+        if team_id:
+            # Check if there's an existing record for this team and week
+            weekly_result = WeeklyResult.query.filter_by(week=week, team=team_id).first()
+
+            if weekly_result:
+                print("replacing result: " + result)
+                # Update existing record
+                weekly_result.result = result
+            else:
+                # Create a new record
+                print("new result: " + result)
+                new_result = WeeklyResult(week=week, team=team_id, result=result)
+                db.session.add(new_result)
+
+    # Commit changes to the database
+    db.session.commit()
+
+    # Update Pick status
+    all_picks = Pick.query.filter_by(week=week).all()
+    for pick in all_picks:
+        print("updating a pick: " + pick.team)
+        pick.is_correct = is_pick_correct(pick.team, week)
+
+    db.session.commit()
+
+def fetch_results_for_week(week):
+    url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2023&seasontype=2&week={week}"
+    response = requests.get(url)
+    data = response.json()
+
+    # Extract teams on bye
+    teams_on_bye = {team['displayName']: 'did not play' for team in data['week']['teamsOnBye']}
+
+    # Process game results
+    game_results = {}
+    for event in data['events']:
+        for competition in event['competitions']:
+            for competitor in competition['competitors']:
+                team_name = competitor['team']['displayName']
+                result = 'win' if competitor.get('winner', True) else 'lose'
+                game_results[team_name] = result
+
+    # Combine bye teams and game results
+    all_results = {**teams_on_bye, **game_results}
+    print(json.dumps(all_results, indent=4))
+    return all_results
+
+def map_team_names_to_ids():
+    teams = load_nfl_teams()
+    return {team['name']: team['id'] for team in teams}
