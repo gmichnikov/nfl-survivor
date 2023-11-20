@@ -35,7 +35,7 @@ def calculate_current_week():
 
 def calculate_game_week(game_time_utc):
     # Define the cutoff date for week 1 in UTC timezone
-    week_one_cutoff = datetime(2023, 9, 12, tzinfo=pytz.utc)
+    week_one_cutoff = datetime(2023, 9, 13, tzinfo=pytz.utc)
     
     # Check if the game is before the cutoff for week 1
     if game_time_utc < week_one_cutoff:

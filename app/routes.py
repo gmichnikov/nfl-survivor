@@ -548,3 +548,24 @@ def fetch_results_for_week(week):
 def map_team_names_to_ids():
     teams = load_nfl_teams()
     return {team['name']: team['id'] for team in teams}
+
+@app.route('/all_spreads')
+def all_spreads():
+    if not current_user.is_admin:
+        return redirect(url_for('index'))
+
+    # Fetch all spreads from the database and order them by week
+    eastern = pytz.timezone('US/Eastern')
+    utc = timezone('UTC')
+    spreads = Spread.query.order_by(Spread.week, Spread.game_time).all()
+    for spread in spreads:
+        spread.game_time = utc.localize(spread.game_time).astimezone(eastern)
+
+    # Organize spreads by week
+    spreads_by_week = {}
+    for spread in spreads:
+        if spread.week not in spreads_by_week:
+            spreads_by_week[spread.week] = []
+        spreads_by_week[spread.week].append(spread)
+
+    return render_template('all_spreads.html', spreads_by_week=spreads_by_week)

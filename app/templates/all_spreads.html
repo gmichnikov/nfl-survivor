@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Spreads</title>
+</head>
+<body>
+    <h1>All Spreads</h1>
+    {% for week, spreads in spreads_by_week.items() %}
+        <h2>Week {{ week }}</h2>
+        <ul>
+            {% for spread in spreads %}
+                <li>
+                    {{ spread.game_time.strftime("%Y-%m-%d %I:%M %p %Z") }}:
+                    {{ spread.road_team }}
+                    {% if spread.road_team_spread <= 0 %} ({{ spread.road_team_spread }}){% endif %}
+                    @
+                    {{ spread.home_team }}
+                    {% if spread.home_team_spread <= 0 %} ({{ spread.home_team_spread }}){% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+
+    <br>
+    <a href="{{ url_for('index') }}">Home</a>
+    
+</body>
+</html>
