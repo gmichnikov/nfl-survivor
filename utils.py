@@ -16,7 +16,9 @@ def load_nfl_teams_as_pairs():
 def calculate_current_week():
     # return 1
     eastern = pytz.timezone('US/Eastern')
-    first_week_deadline = datetime(2023, 9, 10, 13, 0).astimezone(eastern)
+
+    # first_week_deadline = datetime(2023, 9, 10, 13, 0).astimezone(eastern)
+    first_week_deadline = eastern.localize(datetime(2023, 9, 10, 13, 0))
     now = datetime.now().astimezone(eastern)
     print("first week deadline: " + str(first_week_deadline))
     print("now: " + str(now))

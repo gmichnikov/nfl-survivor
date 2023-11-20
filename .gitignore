@@ -8,3 +8,5 @@ pyvenv.cfg
 # SQLite Database
 *.db
 *.dat
+
+testing.py

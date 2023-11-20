@@ -125,7 +125,7 @@ def pick():
     current_week = calculate_current_week()
     print("Current week is " + str(current_week))
 
-    if current_week > 17:
+    if current_week > 18:
         return redirect(url_for('view_picks'))
 
     wrong_picks = Pick.query.filter_by(user_id=current_user.id, is_correct=False).count()
