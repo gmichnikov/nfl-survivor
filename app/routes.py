@@ -477,7 +477,6 @@ def auto_update():
         if week_number:
             try:
                 week_number = int(week_number)
-                # Fetch scores from the API
                 results = fetch_results_for_week(week_number)
                 # Process and update the database
                 update_weekly_results(week_number, results)
@@ -529,7 +528,8 @@ def fetch_results_for_week(week):
     data = response.json()
 
     # Extract teams on bye
-    teams_on_bye = {team['displayName']: 'did not play' for team in data['week']['teamsOnBye']}
+    # teams_on_bye = {team['displayName']: 'did not play' for team in data['week']['teamsOnBye']}
+    teams_on_bye = {team['displayName']: 'did not play' for team in data['week'].get('teamsOnBye', [])}
 
     # Process game results
     game_results = {}
