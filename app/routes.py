@@ -218,7 +218,7 @@ def view_picks():
             all_picks[week][username] = {'team': team_name, 'is_correct': pick.is_correct}
 
             # Count wrong picks
-            if not pick.is_correct:
+            if pick.is_correct is False:
                 wrong_picks_count[username] = wrong_picks_count.get(username, 0) + 1
 
 
@@ -503,27 +503,33 @@ def update_weekly_results(week, results):
 
     for team_name, result in results.items():
         team_id = team_name_to_id.get(team_name)
-        print("team id: " + team_id)
 
         if team_id:
             # Check if there's an existing record for this team and week
             weekly_result = WeeklyResult.query.filter_by(week=week, team=team_id).first()
 
             if weekly_result:
-                print("replacing result: " + result)
                 # Update existing record
                 weekly_result.result = result
             else:
                 # Create a new record
-                print("new result: " + result)
                 new_result = WeeklyResult(week=week, team=team_id, result=result)
                 db.session.add(new_result)
+
+    log_entry = Logs(
+        timestamp=datetime.now().astimezone(pytz.utc),
+        user_id=current_user.id,
+        action_type="auto_update",
+        description= current_user.username + " auto-updated results for week " + str(week)
+    )
+    db.session.add(log_entry)
 
     # Commit changes to the database
     db.session.commit()
 
     # Update Pick status
     all_picks = Pick.query.filter_by(week=week).all()
+    print("picks for week: " + str(all_picks) + " for week " + str(week))
     for pick in all_picks:
         print("updating a pick: " + pick.team)
         pick.is_correct = is_pick_correct(pick.team, week)
@@ -550,7 +556,7 @@ def fetch_results_for_week(week):
 
     # Combine bye teams and game results
     all_results = {**teams_on_bye, **game_results}
-    print(json.dumps(all_results, indent=4))
+    # print(json.dumps(all_results, indent=4))
     return all_results
 
 def map_team_names_to_ids():
@@ -577,3 +583,73 @@ def all_spreads():
         spreads_by_week[spread.week].append(spread)
 
     return render_template('all_spreads.html', spreads_by_week=spreads_by_week)
+
+@app.route('/admin_auto_pick', methods=['GET', 'POST'])
+@login_required
+def admin_auto_pick():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        week_number = int(request.form['week_number'])
+        users = User.query.all()
+
+        teams = load_nfl_teams()
+        name_to_id_mapping = {team['name']: team['id'] for team in teams}
+
+        for user in users:
+            if not user_has_two_wrong_picks(user) and not user_made_pick_for_week(user, week_number):
+                previously_picked_teams = get_previously_picked_teams(user, week_number)
+                team_to_pick = find_team_with_most_negative_spread(previously_picked_teams, week_number)
+                if team_to_pick:
+                    team_id = name_to_id_mapping.get(team_to_pick)
+                    print("Picking " + team_to_pick + " for " + user.username + " in week " + str(week_number))
+                    pick = Pick(user_id=user.id, week=week_number, team=team_id, is_correct=None)
+                    db.session.add(pick)
+
+                    log_entry = Logs(
+                        timestamp=datetime.now().astimezone(pytz.utc),
+                        user_id=current_user.id,
+                        action_type="auto_pick",
+                        description= current_user.username + " auto-picking " + team_to_pick + " for " + user.username + " in week " + str(week_number)
+                    )
+                    db.session.add(log_entry)
+        db.session.commit()
+        flash('Auto picks set for week ' + str(week_number))
+        return redirect(url_for('index'))
+
+    return render_template('admin_auto_pick.html')
+
+def user_has_two_wrong_picks(user):
+    wrong_picks_count = Pick.query.filter_by(user_id=user.id, is_correct=False).count()
+    return wrong_picks_count >= 2
+
+def user_made_pick_for_week(user, week):
+    pick_exists = Pick.query.filter_by(user_id=user.id, week=week).first() is not None
+    return pick_exists
+
+# def get_previously_picked_teams(user, up_to_week):
+#     picks = Pick.query.filter(Pick.user_id == user.id, Pick.week < up_to_week).all()
+#     return [pick.team for pick in picks]
+
+def get_previously_picked_teams(user, up_to_week):
+    picks = Pick.query.filter(Pick.user_id == user.id, Pick.week < up_to_week).all()
+    team_lookup = {team['id']: team['name'] for team in load_nfl_teams()}
+    return [team_lookup.get(pick.team, pick.team) for pick in picks]
+
+def find_team_with_most_negative_spread(previously_picked_teams, week_number):
+    spreads = Spread.query.filter_by(week=week_number).all()
+    most_negative_spread = None
+    team_to_pick = None
+
+    for spread in spreads:
+        if spread.home_team not in previously_picked_teams and (most_negative_spread is None or spread.home_team_spread < most_negative_spread):
+            most_negative_spread = spread.home_team_spread
+            team_to_pick = spread.home_team
+
+        if spread.road_team not in previously_picked_teams and (most_negative_spread is None or spread.road_team_spread < most_negative_spread):
+            most_negative_spread = spread.road_team_spread
+            team_to_pick = spread.road_team
+
+    return team_to_pick

@@ -20,8 +20,8 @@ def calculate_current_week():
     # first_week_deadline = datetime(2023, 9, 10, 13, 0).astimezone(eastern)
     first_week_deadline = eastern.localize(datetime(2023, 9, 10, 13, 0))
     now = datetime.now().astimezone(eastern)
-    print("first week deadline: " + str(first_week_deadline))
-    print("now: " + str(now))
+    # print("first week deadline: " + str(first_week_deadline))
+    # print("now: " + str(now))
 
     # datetime.now().astimezone(pytz.utc) maybe try this
     # now = datetime(2024, 9, 2, 20, 0).astimezone(eastern) #fake
@@ -30,7 +30,7 @@ def calculate_current_week():
         return 1
 
     result = 2 + ((now - first_week_deadline).days // 7)
-    print("Week is " + str(result))
+    # print("Week is " + str(result))
     return result
 
 def calculate_game_week(game_time_utc):
