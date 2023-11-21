@@ -10,6 +10,7 @@ from pytz import timezone
 import requests
 import os
 import json
+import uuid
 
 
 @app.route('/')
@@ -581,3 +582,37 @@ def update_spread_weeks():
         db.session.add(spread)
     db.session.commit()
     return "Spread weeks updated successfully"
+
+
+@app.route('/add-four-games')
+@login_required
+def add_four_games():
+    new_spreads_data = [
+        ("2023-10-13 00:15:00", "Kansas City Chiefs", "Denver Broncos", -10.5, 10.5, 6),
+        ("2023-10-27 00:15:00", "Buffalo Bills", "Tampa Bay Buccaneers", -10, 10, 8),
+        ("2023-11-03 00:15:00", "Pittsburgh Steelers", "Tennessee Titans", -3, 3, 9),
+        ("2023-11-10 01:15:00", "Chicago Bears", "Carolina Panthers", -3, 3, 10)
+    ]
+
+    for spread_data in new_spreads_data:
+        # Parse the game_time string into a datetime object
+        game_time = datetime.strptime(spread_data[0], "%Y-%m-%d %H:%M:%S")
+
+        # Create a new Spread object
+        new_spread = Spread(
+            odds_id=str(uuid.uuid4().hex),  # Generate a random 32-char hex string
+            update_time=datetime.utcnow(),  # Current UTC time
+            game_time=game_time,
+            home_team=spread_data[1],
+            road_team=spread_data[2],
+            home_team_spread=spread_data[3],
+            road_team_spread=spread_data[4],
+            week=spread_data[5]
+        )
+
+        # Add the new Spread to the session and commit
+        db.session.add(new_spread)
+
+    # Commit all new spreads to the database
+    db.session.commit()
+    return "Spreads added successfully"
