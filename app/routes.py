@@ -569,3 +569,15 @@ def all_spreads():
         spreads_by_week[spread.week].append(spread)
 
     return render_template('all_spreads.html', spreads_by_week=spreads_by_week)
+
+@app.route('/update-spread-weeks')
+@login_required
+def update_spread_weeks():
+    spreads = Spread.query.all()
+    for spread in spreads:
+        spread_game_time_aware = pytz.utc.localize(spread.game_time)
+        correct_week = calculate_game_week(spread_game_time_aware)
+        spread.week = correct_week
+        db.session.add(spread)
+    db.session.commit()
+    return "Spread weeks updated successfully"
