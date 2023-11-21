@@ -10,6 +10,7 @@
             <thead>
                 <tr class="header-row">
                     <th class="first-col">User</th>
+                    <th class="second-col">Losses</th>
                     {% for week in all_picks.keys() %}
                     <th>Week {{ week }}</th>
                     {% endfor %}
@@ -19,6 +20,7 @@
                 {% for username in usernames %}
                 <tr>
                     <td class="first-col">{{ username }}</td>
+                    <td class="second-col">{{ wrong_picks_count.get(username, 0) }}</td>
                     {% for week, week_picks in all_picks.items() %}
                     <td class="{{ 'correct' if week_picks.get(username, {}).get('is_correct') is true else 'incorrect' if week_picks.get(username, {}).get('is_correct') is false else 'nopick' }}">
                         {{ week_picks.get(username, {}).get('team', 'Not Submitted') }}

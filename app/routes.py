@@ -200,6 +200,7 @@ def pick():
 @login_required
 def view_picks():
     all_picks = {}
+    wrong_picks_count = {}
     usernames = [user.username for user in User.query.all()]
     usernames.sort()  # Sort usernames alphabetically
 
@@ -211,11 +212,17 @@ def view_picks():
         picks_for_week = Pick.query.filter_by(week=week).all()
 
         for pick in picks_for_week:
-            username = User.query.filter_by(id=pick.user_id).first().username
+            user = User.query.filter_by(id=pick.user_id).first()
+            username = user.username
             team_name = team_lookup.get(pick.team, pick.team)
             all_picks[week][username] = {'team': team_name, 'is_correct': pick.is_correct}
 
-    return render_template('view_picks.html', all_picks=all_picks, usernames=usernames)
+            # Count wrong picks
+            if not pick.is_correct:
+                wrong_picks_count[username] = wrong_picks_count.get(username, 0) + 1
+
+
+    return render_template('view_picks.html', all_picks=all_picks, usernames=usernames, wrong_picks_count=wrong_picks_count)
 
 @app.route('/logout')
 def logout():
