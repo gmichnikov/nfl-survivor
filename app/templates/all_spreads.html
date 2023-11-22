@@ -5,6 +5,7 @@
     <title>All Spreads</title>
 </head>
 <body>
+    <a href="{{ url_for('index') }}">Home</a>
     <h1>All Spreads</h1>
     {% for week, spreads in spreads_by_week.items() %}
         <h2>Week {{ week }}</h2>

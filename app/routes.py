@@ -202,7 +202,6 @@ def view_picks():
     all_picks = {}
     wrong_picks_count = {}
     usernames = [user.username for user in User.query.all()]
-    usernames.sort()  # Sort usernames alphabetically
 
     # Convert team IDs to names
     team_lookup = {team['id']: team['name'] for team in load_nfl_teams()}
@@ -221,8 +220,9 @@ def view_picks():
             if pick.is_correct is False:
                 wrong_picks_count[username] = wrong_picks_count.get(username, 0) + 1
 
+    sorted_usernames = sorted(usernames, key=lambda username: wrong_picks_count.get(username, 0))
 
-    return render_template('view_picks.html', all_picks=all_picks, usernames=usernames, wrong_picks_count=wrong_picks_count)
+    return render_template('view_picks.html', all_picks=all_picks, usernames=sorted_usernames, wrong_picks_count=wrong_picks_count)
 
 @app.route('/logout')
 def logout():
@@ -272,7 +272,7 @@ def view_logs():
     eastern = pytz.timezone('US/Eastern')
     utc = timezone('UTC')
 
-    logs = Logs.query.all()
+    logs = Logs.query.order_by(Logs.timestamp.desc()).all()
     for log in logs:
         log.timestamp = utc.localize(log.timestamp).astimezone(eastern)
     return render_template('view_logs.html', logs=logs)
@@ -617,7 +617,7 @@ def admin_auto_pick():
                     db.session.add(log_entry)
         db.session.commit()
         flash('Auto picks set for week ' + str(week_number))
-        return redirect(url_for('index'))
+        return redirect(url_for('view_logs'))
 
     return render_template('admin_auto_pick.html')
 

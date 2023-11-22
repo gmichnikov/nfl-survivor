@@ -1,34 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Home</title>
+    <title>NFL Survivor Pool 2023</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Home</h1>
+    <h1>NFL Survivor Pool 2023</h1>
 
-    <a href="{{ url_for('login') }}">Login</a> |
-    <a href="{{ url_for('register') }}">Register</a> |
+
+    <h2>Pick</h2>
     <a href="{{ url_for('pick') }}">Pick</a> |
     <a href="{{ url_for('view_picks') }}">View Picks</a>
 
+
+
+    <h2>Account</h2>
+    <a href="{{ url_for('login') }}">Login</a> |
+    <a href="{{ url_for('register') }}">Register</a>
     {% if logged_in %}
         <p>You are logged in as {{ username }}</p>
-        <a href="{{ url_for('logout') }}">Logout</a> |
+        <a href="{{ url_for('logout') }}">Logout</a>
     {% else %}
         <p>No one is logged in</p>
     {% endif %}
 
     {% if logged_in and current_user.is_admin %}
-        <a href="{{ url_for('admin') }}">Set results</a> |
-        <a href="{{ url_for('admin_reset_password') }}">Reset Passwords</a> |
+        <h2>Set Picks</h2>
+        <a href="{{ url_for('admin_set_pick') }}">Manually Set a Pick</a> | 
+        <a href="{{ url_for('admin_auto_pick') }}">Auto Pick for Week</a>
+        <h2>Set Results</h2>
+        <a href="{{ url_for('admin') }}">Manually</a> |
+        <a href="{{ url_for('auto_update') }}">Auto Update</a>
+        <h2>Spreads</h2>
+        <a href="{{ url_for('fetch_spreads') }}">Fetch Spreads</a> |
+        <a href="{{ url_for('all_spreads') }}">All Spreads</a>
+        <h2>Other</h2>
         <a href="{{ url_for('view_logs') }}">View Logs</a> |
         <a href="{{ url_for('admin_view_picks') }}">Admin View Picks</a> | 
-        <a href="{{ url_for('admin_set_pick') }}">Admin Set Pick</a> | 
-        <a href="{{ url_for('fetch_spreads') }}">Fetch Spreads</a> |
-        <a href="{{ url_for('auto_update') }}">Auto Update Results</a> |
-        <a href="{{ url_for('all_spreads') }}">All Spreads</a> |
-        <a href="{{ url_for('admin_auto_pick') }}">Admin Auto Pick</a>
+        <a href="{{ url_for('admin_reset_password') }}">Reset Passwords</a>
     {% endif %}
 
 </body>
