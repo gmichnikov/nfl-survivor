@@ -11,6 +11,7 @@ import requests
 import os
 import json
 import uuid
+from collections import OrderedDict
 
 
 @app.route('/')
@@ -142,7 +143,10 @@ def pick():
 
     team_lookup = load_nfl_teams_as_dict()
     picked_teams_for_list = {pick.week: pick.team for pick in previous_picks}
-    picked_team_names = {week: team_lookup.get(team_id, team_id) for week, team_id in picked_teams_for_list.items()}
+
+    sorted_weeks = sorted(picked_teams_for_list.keys())
+    picked_team_names = OrderedDict((week, team_lookup.get(picked_teams_for_list[week], picked_teams_for_list[week])) for week in sorted_weeks)
+
     selected_week = int(request.form.get('week_selector', current_week))
 
     available_teams = [(team_id, team_name) for (team_id, team_name) in load_nfl_teams_as_pairs() if team_id not in picked_teams]

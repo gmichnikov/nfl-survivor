@@ -2,30 +2,40 @@
 <html>
 <head>
     <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-size: 16px; /* Adjust as needed */
+            padding: 10px;
+        }
+        form {
+            max-width: 300px; /* Or another suitable width */
+            margin: auto;
+        }
+        input[type="text"], input[type="password"], input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            box-sizing: border-box; /* Ensures padding doesn't affect width */
+        }
+        @media (max-width: 600px) {
+            body {
+                font-size: 18px; /* Larger font size on smaller screens */
+            }
+        }
+    </style>
 </head>
 <body>
     <h1>Login</h1>
-
-    <!-- Flash Messages: Above the Form -->
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    
     <form method="post">
         {{ form.hidden_tag() }}
         <p>
             {{ form.username.label }}<br>
-            {{ form.username() }}
+            {{ form.username(size=30) }}
         </p>
         <p>
             {{ form.password.label }}<br>
-            {{ form.password() }}
+            {{ form.password(size=30) }}
         </p>
         <p>
             {{ form.submit() }}

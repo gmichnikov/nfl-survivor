@@ -1,40 +1,82 @@
-<h1>Pick</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NFL Survivor Pool 2023</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<h3>Your Picks:</h3>
-<ul>
-    {% for week, team in all_picks.items() %}
-        <li>Week {{ week }}: {{ team }}</li>
-    {% endfor %}
-</ul>
+    <style>
+        form {
+            margin: 20px auto; /* Centered with automatic margins */
+            max-width: 500px; /* Maximum width */
+        }
+        form input, form select, form label {
+            display: block; /* Stack elements vertically */
+            width: 100%; /* Full width */
+            margin: 5px 0; /* Spacing between elements */
+            padding: 10px; /* Padding for touch friendliness */
+            font-size: 16px; /* Larger font size for readability */
+        }
+        form input[type="submit"] {
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            border: none;
+            cursor: pointer;
+        }
+        form input[type="submit"]:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
+        @media (max-width: 600px) {
+            form {
+                max-width: none; /* Full width on small screens */
+            }
+            ul li, form label, form input, form select {
+                font-size: 18px; /* Larger font size on smaller screens */
+            }
+        }
+    </style>    
 
-<h3>Make a Pick</h3>
-<form method="post">
-    {{ form.hidden_tag() }}
-    {{ form.week.label }}<br>
-    {{ form.week() }}<br>
-    {{ form.team_choice.label }}<br>
-    {{ form.team_choice() }}<br>
-    {{ form.submit() }}
-</form>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Pick</h1>
 
-<h3>Recent and Upcoming Spreads</h3>
+    <h3>Your Picks:</h3>
+    <ul>
+        {% for week, team in all_picks.items() %}
+            <li>Week {{ week }}: {{ team }}</li>
+        {% endfor %}
+    </ul>
 
-{% if last_updated_time %}
-<p>Last updated at: {{ last_updated_time.strftime("%Y-%m-%d %I:%M %p %Z") }}</p>
-{% endif %}
+    <h3>Make a Pick</h3>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        {{ form.week.label }}<br>
+        {{ form.week() }}<br>
+        {{ form.team_choice.label }}<br>
+        {{ form.team_choice() }}<br>
+        {{ form.submit() }}
+    </form>
 
-<ul>
-    {% for spread in spreads %}
-    <li>
-        {{ spread.game_time.strftime("%Y-%m-%d %I:%M %p %Z") }}:
-        {{ spread.road_team }}
-        {% if spread.road_team_spread <= 0 %} ({{ spread.road_team_spread }}){% endif %}
-        @
-        {{ spread.home_team }}
-        {% if spread.home_team_spread <= 0 %} ({{ spread.home_team_spread }}){% endif %}
-    </li>
-    {% endfor %}
-</ul>
+    <h3>Recent and Upcoming Spreads</h3>
 
-<a href="{{ url_for('index') }}">Home</a> | 
-<a href="{{ url_for('view_picks') }}">View All Picks</a>
+    {% if last_updated_time %}
+    <p>Last updated at: {{ last_updated_time.strftime("%Y-%m-%d %I:%M %p %Z") }}</p>
+    {% endif %}
+
+    <ul>
+        {% for spread in spreads %}
+        <li>
+            {{ spread.game_time.strftime("%Y-%m-%d %I:%M %p %Z") }}:
+            {{ spread.road_team }}
+            {% if spread.road_team_spread <= 0 %} ({{ spread.road_team_spread }}){% endif %}
+            @
+            {{ spread.home_team }}
+            {% if spread.home_team_spread <= 0 %} ({{ spread.home_team_spread }}){% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('index') }}">Home</a> | 
+    <a href="{{ url_for('view_picks') }}">View All Picks</a>
+</body>
+</html>

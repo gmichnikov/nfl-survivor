@@ -6,17 +6,6 @@
 <body>
     <h1>Register</h1>
 
-    <!-- Flash Messages: Above the Form -->
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-
     <form method="post">
         {{ form.hidden_tag() }}
         <p>
