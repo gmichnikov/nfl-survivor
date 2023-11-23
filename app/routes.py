@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request
-from app import app, db
+from app import app, db, login_manager
 from app.models import User, Pick, WeeklyResult, Logs, Spread
-from flask_login import login_user, logout_user, login_required, current_user, LoginManager
+from flask_login import login_user, logout_user, login_required, current_user
 from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm, AdminSetPickForm
 from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict, calculate_game_week
 from datetime import datetime, timedelta
@@ -63,10 +63,6 @@ def login():
         else:
             flash('Invalid username or password')
     return render_template('login.html', form=form)
-
-# Initialize the LoginManager
-login_manager = LoginManager()
-login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
