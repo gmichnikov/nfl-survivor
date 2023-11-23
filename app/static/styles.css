@@ -47,3 +47,18 @@
 .styled-table thead tr.header-row .second-col {
     color: crimson;
 }
+
+.spread-favored-1 { /* Light highlight for spreads -1 to -5 */
+    font-weight: bold;
+    color: cornflowerblue;
+}
+
+.spread-favored-2 { /* Medium highlight for spreads -6 to -8 */
+    font-weight: bold;
+    color: blue;
+}
+
+.spread-favored-3 { /* Strong highlight for spreads -9 and more */
+    font-weight: bold;
+    color: darkblue;
+}
