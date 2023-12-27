@@ -10,3 +10,4 @@ pyvenv.cfg
 *.dat
 
 testing.py
+db_backup
