@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Results</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 10px;
+            text-align: center;
+        }
+        .win {
+            background-color: darkgreen;
+            color: white;
+        }
+        .lose {
+            background-color: maroon;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weekly Results by Team</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Team</th>
+                {% for week in range(0, 18) %}
+                <th>Week {{ week }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for team, weeks in results_by_team.items() %}
+            <tr>
+                <td>{{ team }}</td>
+                {% for week in range(0, 18) %}
+                <td class="{% if weeks[week] == 'win' %}win{% elif weeks[week] == 'lose' %}lose{% endif %}">
+                    {{ weeks[week] }}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

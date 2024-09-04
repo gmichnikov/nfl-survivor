@@ -652,3 +652,23 @@ def find_team_with_most_negative_spread(previously_picked_teams, week_number):
             team_to_pick = spread.road_team
 
     return team_to_pick
+
+@app.route('/admin_view_weekly_results')
+@login_required
+def admin_view_weekly_results():
+    if not current_user.is_admin:
+        return "Access Denied", 403
+
+    team_dict = load_nfl_teams_as_dict()
+
+    weekly_results = WeeklyResult.query.all()
+
+    results_by_team = {}
+    for result in weekly_results:
+        team_name = team_dict.get(result.team, 'Unknown Team')
+        if team_name not in results_by_team:
+            results_by_team[team_name] = {week: '' for week in range(0, 18)}
+        results_by_team[team_name][result.week] = result.result
+    sorted_results_by_team = dict(sorted(results_by_team.items()))
+
+    return render_template('admin_view_weekly_results.html', results_by_team=sorted_results_by_team)
