@@ -11,3 +11,5 @@ pyvenv.cfg
 
 testing.py
 db_backup
+
+*.zip

@@ -17,8 +17,7 @@ def calculate_current_week():
     # return 1
     eastern = pytz.timezone('US/Eastern')
 
-    # first_week_deadline = datetime(2023, 9, 10, 13, 0).astimezone(eastern)
-    first_week_deadline = eastern.localize(datetime(2023, 9, 10, 13, 0))
+    first_week_deadline = eastern.localize(datetime(2024, 9, 8, 13, 0))
     now = datetime.now().astimezone(eastern)
     # print("first week deadline: " + str(first_week_deadline))
     # print("now: " + str(now))
@@ -35,7 +34,7 @@ def calculate_current_week():
 
 def calculate_game_week(game_time_utc):
     # Define the cutoff date for week 1 in UTC timezone
-    week_one_cutoff = datetime(2023, 9, 13, tzinfo=pytz.utc)
+    week_one_cutoff = datetime(2024, 9, 11, tzinfo=pytz.utc)
     
     # Check if the game is before the cutoff for week 1
     if game_time_utc < week_one_cutoff:

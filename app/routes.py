@@ -349,7 +349,7 @@ def fetch_spreads():
         flash('You do not have permission to access this page.')
         return redirect(url_for('index'))
 
-    first_week_start_date = datetime(2023, 9, 7)
+    first_week_start_date = datetime(2024, 9, 5)
     current_week = calculate_current_week()
     days_shift = (current_week - 1) * 7
     commenceTimeFrom = datetime.now().astimezone(pytz.utc)
@@ -359,7 +359,6 @@ def fetch_spreads():
     commenceTimeFrom_str = commenceTimeFrom.strftime('%Y-%m-%dT%H:%M:%SZ')
     commenceTimeTo_str = commenceTimeTo.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    # Your API call code here
     odds_response = requests.get(f'https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds', params={
         'api_key': os.environ.get('ODDS_API_KEY'),
         'bookmakers': 'draftkings,fanduel',
@@ -537,7 +536,7 @@ def update_weekly_results(week, results):
     db.session.commit()
 
 def fetch_results_for_week(week):
-    url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2023&seasontype=2&week={week}"
+    url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2024&seasontype=2&week={week}"
     response = requests.get(url)
     data = response.json()
 

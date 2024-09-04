@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Fetch Spreads</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 
@@ -15,11 +16,15 @@
     {% for spread in spreads %}
     <li>
         {{ spread.game_time.strftime("%Y-%m-%d %I:%M %p %Z") }}:
-        {{ spread.road_team }}
-        {% if spread.road_team_spread <= 0 %} ({{ spread.road_team_spread }}){% endif %}
+        <span class="{{ 'spread-favored-1' if spread.road_team_spread <= -0.5 and spread.road_team_spread > -5 else 'spread-favored-2' if spread.road_team_spread <= -5 and spread.road_team_spread > -8 else 'spread-favored-3' if spread.road_team_spread <= -8 else '' }}">
+            {{ spread.road_team }}
+            {% if spread.road_team_spread <= 0 %} ({{ spread.road_team_spread }}){% endif %}
+        </span>
         @
-        {{ spread.home_team }}
-        {% if spread.home_team_spread <= 0 %} ({{ spread.home_team_spread }}){% endif %}
+        <span class="{{ 'spread-favored-1' if spread.home_team_spread <= -0.5 and spread.home_team_spread > -5 else 'spread-favored-2' if spread.home_team_spread <= -5 and spread.home_team_spread > -8 else 'spread-favored-3' if spread.home_team_spread <= -8 else '' }}">
+            {{ spread.home_team }}
+            {% if spread.home_team_spread <= 0 %} ({{ spread.home_team_spread }}){% endif %}
+        </span>
     </li>
     {% endfor %}
 </ul>
