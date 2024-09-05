@@ -672,3 +672,23 @@ def admin_view_weekly_results():
     sorted_results_by_team = dict(sorted(results_by_team.items()))
 
     return render_template('admin_view_weekly_results.html', results_by_team=sorted_results_by_team)
+
+@app.route('/admin_view_all_picks')
+@login_required
+def admin_view_all_picks():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    users = User.query.all()
+    picks = Pick.query.all()
+    team_lookup = load_nfl_teams_as_dict()
+
+    picks_by_user = {user.username: {week: '' for week in range(1, 19)} for user in users}
+
+    for pick in picks:
+        user = User.query.get(pick.user_id)
+        team_name = team_lookup.get(pick.team, pick.team)
+        picks_by_user[user.username][pick.week] = team_name
+
+    return render_template('admin_view_all_picks.html', picks_by_user=picks_by_user)

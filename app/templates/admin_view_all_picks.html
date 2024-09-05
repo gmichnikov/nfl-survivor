@@ -1,0 +1,24 @@
+<h1>All User Picks</h1>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Username</th>
+            {% for week in range(1, 19) %}
+                <th>Week {{ week }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for username, picks in picks_by_user.items() %}
+            <tr>
+                <td>{{ username }}</td>
+                {% for week in range(1, 19) %}
+                    <td>{{ picks[week] }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<br>
+<a href="{{ url_for('index') }}">Home</a>
