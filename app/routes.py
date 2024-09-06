@@ -168,10 +168,9 @@ def pick():
         new_log = Logs(timestamp=log_time,
                       user_id=current_user.id,
                       action_type="pick",
-                      description=f"{current_user.username} picked {team_name}")
+                      description=f"{current_user.username} picked {team_name} for Week {form.week.data}")
         
         db.session.add(new_log)
-
         db.session.commit()
         flash('Your pick has been submitted.')
         return redirect(url_for('pick'))
@@ -692,3 +691,25 @@ def admin_view_all_picks():
         picks_by_user[user.username][pick.week] = team_name
 
     return render_template('admin_view_all_picks.html', picks_by_user=picks_by_user)
+
+@app.route('/admin_view_users')
+@login_required
+def admin_view_users():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    users = User.query.all()
+    user_data = []
+    for user in users:
+        picks = Pick.query.filter_by(user_id=user.id).all()
+        wrong_picks = sum(1 for pick in picks if pick.is_correct is False)
+        user_data.append({
+            'username': user.username,
+            'id': user.id,
+            'is_admin': user.is_admin,
+            'picks_count': len(picks),
+            'wrong_picks': wrong_picks
+        })
+
+    return render_template('admin_view_users.html', users=user_data)
