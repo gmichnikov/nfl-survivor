@@ -200,7 +200,8 @@ def pick():
 def view_picks():
     all_picks = {}
     wrong_picks_count = {}
-    usernames = [user.username for user in User.query.all()]
+    users = User.query.order_by(User.username).all()  # Sort users by username
+    usernames = [user.username for user in users]
 
     # Convert team IDs to names
     team_lookup = {team['id']: team['name'] for team in load_nfl_teams()}
@@ -219,9 +220,7 @@ def view_picks():
             if pick.is_correct is False:
                 wrong_picks_count[username] = wrong_picks_count.get(username, 0) + 1
 
-    sorted_usernames = sorted(usernames, key=lambda username: wrong_picks_count.get(username, 0))
-
-    return render_template('view_picks.html', all_picks=all_picks, usernames=sorted_usernames, wrong_picks_count=wrong_picks_count)
+    return render_template('view_picks.html', all_picks=all_picks, usernames=usernames, wrong_picks_count=wrong_picks_count)
 
 @app.route('/logout')
 def logout():
