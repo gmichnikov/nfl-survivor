@@ -206,7 +206,7 @@ def view_picks():
     # Convert team IDs to names
     team_lookup = {team['id']: team['name'] for team in load_nfl_teams()}
     
-    for week in range(3, calculate_current_week()):
+    for week in range(1, calculate_current_week()):
         all_picks[week] = {}
         picks_for_week = Pick.query.filter_by(week=week).all()
 
@@ -561,6 +561,7 @@ def map_team_names_to_ids():
     return {team['name']: team['id'] for team in teams}
 
 @app.route('/all_spreads')
+@login_required
 def all_spreads():
     if not current_user.is_admin:
         return redirect(url_for('index'))
@@ -665,7 +666,7 @@ def admin_view_weekly_results():
     for result in weekly_results:
         team_name = team_dict.get(result.team, 'Unknown Team')
         if team_name not in results_by_team:
-            results_by_team[team_name] = {week: '' for week in range(0, 18)}
+            results_by_team[team_name] = {week: '' for week in range(1, 18)}
         results_by_team[team_name][result.week] = result.result
     sorted_results_by_team = dict(sorted(results_by_team.items()))
 
