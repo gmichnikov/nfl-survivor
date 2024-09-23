@@ -35,3 +35,13 @@ class AdminSetPickForm(FlaskForm):
     week = SelectField('Week', choices=[(str(i), str(i)) for i in range(1, 18)])
     team = SelectField('Team', choices=[])  # Populate this dynamically
     submit = SubmitField('Set Pick')
+
+class AdminGenerateResetCodeForm(FlaskForm):
+    username = SelectField('Username', validators=[DataRequired()])
+    submit = SubmitField('Generate Reset Code')
+
+class UserResetPasswordForm(FlaskForm):
+    username = SelectField('Username', validators=[DataRequired()])
+    reset_code = StringField('Reset Code', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[DataRequired()])
+    submit = SubmitField('Reset Password')

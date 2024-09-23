@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 
@@ -54,3 +54,13 @@ class Spread(db.Model):
     home_team_spread = db.Column(db.Float, nullable=False)
     road_team_spread = db.Column(db.Float, nullable=False)
     week = db.Column(db.Integer, nullable=False)
+
+class ResetCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    code = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    used = db.Column(db.Boolean, default=False)
+
+    def is_valid(self):
+        return not self.used and (datetime.utcnow() - self.created_at) < timedelta(hours=24)

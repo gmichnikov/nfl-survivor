@@ -1,0 +1,22 @@
+<h1>Generate Reset Code</h1>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.username.label }}<br>
+        {{ form.username() }}
+    </p>
+    <p>{{ form.submit() }}</p>
+</form>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<br>
+<a href="{{ url_for('index') }}">Home</a>

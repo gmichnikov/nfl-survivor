@@ -1,8 +1,8 @@
 from flask import render_template, redirect, url_for, flash, request
 from app import app, db, login_manager
-from app.models import User, Pick, WeeklyResult, Logs, Spread
+from app.models import User, Pick, WeeklyResult, Logs, Spread, ResetCode
 from flask_login import login_user, logout_user, login_required, current_user
-from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm, AdminSetPickForm
+from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm, AdminSetPickForm, AdminGenerateResetCodeForm, UserResetPasswordForm
 from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict, calculate_game_week
 from datetime import datetime, timedelta
 import pytz
@@ -10,8 +10,8 @@ from pytz import timezone
 import requests
 import os
 import json
-import uuid
 from collections import OrderedDict
+import secrets
 
 
 @app.route('/')
@@ -713,3 +713,60 @@ def admin_view_users():
         })
 
     return render_template('admin_view_users.html', users=user_data)
+
+@app.route('/admin_generate_reset_code', methods=['GET', 'POST'])
+@login_required
+def admin_generate_reset_code():
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    form = AdminGenerateResetCodeForm()
+    form.username.choices = [(user.username, user.username) for user in User.query.all()]
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        code = secrets.token_urlsafe(16)
+        reset_code = ResetCode(user_id=user.id, code=code)
+        db.session.add(reset_code)
+
+        log_entry = Logs(
+            user_id=current_user.id,
+            action_type="generate reset code",
+            description=f"Generated reset code for user {user.username}"
+        )
+        db.session.add(log_entry)
+
+        db.session.commit()
+
+        flash(f'Reset code for {user.username}: {code}')
+
+    return render_template('admin_generate_reset_code.html', form=form)
+
+@app.route('/user_reset_password', methods=['GET', 'POST'])
+def user_reset_password():
+    form = UserResetPasswordForm()
+    form.username.choices = [(user.username, user.username) for user in User.query.all()]
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        reset_code = ResetCode.query.filter_by(user_id=user.id, code=form.reset_code.data, used=False).order_by(ResetCode.created_at.desc()).first()
+
+        if reset_code and reset_code.is_valid():
+            user.set_password(form.new_password.data)
+            reset_code.used = True
+
+            log_entry = Logs(
+                user_id=user.id,
+                action_type="password reset",
+                description=f"User {user.username} reset their password using a reset code"
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+
+            flash('Your password has been reset successfully.')
+            return redirect(url_for('login'))
+        else:
+            flash('Invalid or expired reset code.')
+
+    return render_template('user_reset_password.html', form=form)
