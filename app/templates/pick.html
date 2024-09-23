@@ -40,14 +40,14 @@
 <body>
     <h1>Pick</h1>
 
-    <h3>Your Picks:</h3>
+    <h2>Your Picks:</h2>
     <ul>
         {% for week, team in all_picks.items() %}
             <li>Week {{ week }}: {{ team }}</li>
         {% endfor %}
     </ul>
 
-    <h3>Make a Pick</h3>
+    <h2>Make a Pick</h2>
     <form method="post">
         {{ form.hidden_tag() }}
         {{ form.week.label }}<br>
@@ -57,29 +57,32 @@
         {{ form.submit() }}
     </form>
 
-    <h3>Recent and Upcoming Spreads</h3>
+    <h2>Recent and Upcoming Spreads</h2>
 
     {% if last_updated_time %}
     <p>Last updated at: {{ last_updated_time.strftime("%Y-%m-%d %I:%M %p %Z") }}</p>
     {% endif %}
 
-    <ul>
-        {% for spread in spreads %}
-        <li>
-            {{ spread.game_time.strftime("%Y-%m-%d %I:%M %p %Z") }}:
-            <span class="{{ 'spread-favored-1' if spread.road_team_spread <= -0.5 and spread.road_team_spread > -5 else 'spread-favored-2' if spread.road_team_spread <= -5 and spread.road_team_spread > -8 else 'spread-favored-3' if spread.road_team_spread <= -8 else '' }}">
-                {{ spread.road_team }}
-                {% if spread.road_team_spread <= 0 %} ({{ spread.road_team_spread }}){% endif %}
-            </span>
-            @
-            <span class="{{ 'spread-favored-1' if spread.home_team_spread <= -0.5 and spread.home_team_spread > -5 else 'spread-favored-2' if spread.home_team_spread <= -5 and spread.home_team_spread > -8 else 'spread-favored-3' if spread.home_team_spread <= -8 else '' }}">
-                {{ spread.home_team }}
-                {% if spread.home_team_spread <= 0 %} ({{ spread.home_team_spread }}){% endif %}
-            </span>
-        </li>
-        {% endfor %}
-    </ul>
-    
+    {% for week, spreads in spreads_by_week.items() %}
+        <h3>Week {{ week }}</h3>
+        <ul>
+            {% for spread in spreads %}
+                <li>
+                    {{ spread.game_time.strftime("%Y-%m-%d %I:%M %p %Z") }}:
+                    <span class="{{ 'spread-favored-1' if spread.road_team_spread <= -0.5 and spread.road_team_spread > -5 else 'spread-favored-2' if spread.road_team_spread <= -5 and spread.road_team_spread > -8 else 'spread-favored-3' if spread.road_team_spread <= -8 else '' }}">
+                        {{ spread.road_team }}
+                        {% if spread.road_team_spread <= 0 %} ({{ spread.road_team_spread }}){% endif %}
+                    </span>
+                    @
+                    <span class="{{ 'spread-favored-1' if spread.home_team_spread <= -0.5 and spread.home_team_spread > -5 else 'spread-favored-2' if spread.home_team_spread <= -5 and spread.home_team_spread > -8 else 'spread-favored-3' if spread.home_team_spread <= -8 else '' }}">
+                        {{ spread.home_team }}
+                        {% if spread.home_team_spread <= 0 %} ({{ spread.home_team_spread }}){% endif %}
+                    </span>
+                </li>            
+                {% endfor %}
+        </ul>
+    {% endfor %}
+
     <a href="{{ url_for('index') }}">Home</a> | 
     <a href="{{ url_for('view_picks') }}">View All Picks</a>
 </body>

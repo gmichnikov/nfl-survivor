@@ -182,9 +182,13 @@ def pick():
     time_24_hours_ago = current_time_utc - timedelta(hours=24)
 
     spreads = Spread.query.filter(Spread.game_time > time_24_hours_ago).order_by(Spread.game_time).all()
-    # spreads = Spread.query.filter_by(week=current_week).order_by(Spread.game_time).all()
+    spreads_by_week = {}
+
     for spread in spreads:
         spread.game_time = utc.localize(spread.game_time).astimezone(eastern)
+        if spread.week not in spreads_by_week:
+            spreads_by_week[spread.week] = []
+        spreads_by_week[spread.week].append(spread)
 
     last_updated_time = db.session.query(db.func.max(Spread.update_time)).filter_by(week=current_week).first()[0]
     if last_updated_time is None:
@@ -193,7 +197,7 @@ def pick():
 
     last_updated_time = utc.localize(last_updated_time).astimezone(eastern)
  
-    return render_template('pick.html', form=form, future_weeks=future_weeks, all_picks=picked_team_names, selected_week=selected_week, spreads=spreads, last_updated_time=last_updated_time, current_week=current_week)
+    return render_template('pick.html', form=form, future_weeks=future_weeks, all_picks=picked_team_names, selected_week=selected_week, spreads_by_week=spreads_by_week, last_updated_time=last_updated_time, current_week=current_week)
 
 @app.route('/view_picks', methods=['GET'])
 @login_required
