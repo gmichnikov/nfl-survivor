@@ -3,7 +3,7 @@ from app import app, db, login_manager
 from app.models import User, Pick, WeeklyResult, Logs, Spread, ResetCode
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm, AdminSetPickForm, AdminGenerateResetCodeForm, UserResetPasswordForm
-from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict, calculate_game_week
+from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict, calculate_game_week, get_ongoing_week
 from datetime import datetime, timedelta
 import pytz
 from pytz import timezone
@@ -703,17 +703,23 @@ def admin_view_users():
         flash('You do not have permission to access this page.')
         return redirect(url_for('index'))
 
+    ongoing_week = get_ongoing_week()
     users = User.query.all()
     user_data = []
     for user in users:
         picks = Pick.query.filter_by(user_id=user.id).all()
         wrong_picks = sum(1 for pick in picks if pick.is_correct is False)
+
+        has_picked_for_this_week = any(pick.week == ongoing_week for pick in picks)
+        needs_to_pick = "Yes" if (wrong_picks < 2) and not has_picked_for_this_week else ""
+
         user_data.append({
             'username': user.username,
             'id': user.id,
             'is_admin': user.is_admin,
             'picks_count': len(picks),
-            'wrong_picks': wrong_picks
+            'wrong_picks': wrong_picks,
+            'needs_to_pick': needs_to_pick
         })
 
     return render_template('admin_view_users.html', users=user_data)

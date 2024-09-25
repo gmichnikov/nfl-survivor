@@ -7,16 +7,22 @@
             <th>Is Admin</th>
             <th>Total Picks</th>
             <th>Wrong Picks</th>
+            <th>Needs to pick</th>
         </tr>
     </thead>
     <tbody>
         {% for user in users %}
             <tr>
                 <td>{{ user.id }}</td>
-                <td>{{ user.username }}</td>
+                <td {% if user.needs_to_pick == "Yes" %} style="background-color: #ffffcc;" {% endif %}>
+                    {{ user.username }}
+                </td>
                 <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
                 <td>{{ user.picks_count }}</td>
                 <td>{{ user.wrong_picks }}</td>
+                <td {% if user.needs_to_pick == "Yes" %} style="background-color: #ffffcc;" {% endif %}>
+                    {{ user.needs_to_pick }}
+                </td>
             </tr>
         {% endfor %}
     </tbody>

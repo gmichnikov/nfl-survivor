@@ -27,6 +27,19 @@ def calculate_current_week():
     result = 2 + ((now - first_week_deadline).days // 7)
     return result
 
+# this defines weeks as 5am Tues, where week 2 starts on the Tues after Week 1's MNF, used to see who needs to pick
+def get_ongoing_week():
+    eastern = pytz.timezone('US/Eastern')
+
+    first_week_deadline = eastern.localize(datetime(2024, 9, 10, 5, 0))
+    now = datetime.now().astimezone(eastern)
+
+    if now < first_week_deadline:
+        return 1
+
+    result = 2 + ((now - first_week_deadline).days // 7)
+    return result
+
 def calculate_game_week(game_time_utc):
     week_one_cutoff = datetime(2024, 9, 11, tzinfo=pytz.utc)
     
