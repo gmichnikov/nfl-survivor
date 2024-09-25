@@ -42,8 +42,17 @@
 
     <h2>Your Picks:</h2>
     <ul>
-        {% for week, team in all_picks.items() %}
-            <li>Week {{ week }}: {{ team }}</li>
+        {% for week, (team, is_correct) in all_picks.items() %}
+            <li 
+                {% if is_correct %} 
+                    style="color: green;" 
+                {% elif is_correct is not none and not is_correct %} 
+                    style="color: red;" 
+                {% else %} 
+                {% endif %}
+            >
+                Week {{ week }}: {{ team }}
+            </li>
         {% endfor %}
     </ul>
 

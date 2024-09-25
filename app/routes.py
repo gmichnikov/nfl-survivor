@@ -138,10 +138,15 @@ def pick():
     picked_teams = [pick.team for pick in previous_picks]
 
     team_lookup = load_nfl_teams_as_dict()
-    picked_teams_for_list = {pick.week: pick.team for pick in previous_picks}
+    # picked_teams_for_list = {pick.week: pick.team for pick in previous_picks}
+    picked_teams_for_list = {pick.week: (pick.team, pick.is_correct) for pick in previous_picks}
 
     sorted_weeks = sorted(picked_teams_for_list.keys())
-    picked_team_names = OrderedDict((week, team_lookup.get(picked_teams_for_list[week], picked_teams_for_list[week])) for week in sorted_weeks)
+    # picked_team_names = OrderedDict((week, team_lookup.get(picked_teams_for_list[week], picked_teams_for_list[week])) for week in sorted_weeks)
+    picked_team_names = OrderedDict(
+        (week, (team_lookup.get(picked_teams_for_list[week][0], picked_teams_for_list[week][0]), picked_teams_for_list[week][1])) 
+        for week in sorted_weeks
+    )
 
     selected_week = int(request.form.get('week_selector', current_week))
 
