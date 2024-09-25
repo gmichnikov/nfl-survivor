@@ -39,14 +39,13 @@
     <h1>NFL Survivor Pool 2024</h1>
 
     {% if logged_in %}
-        <h2>Account</h2>
-        <p>You are logged in as {{ username }}</p>
-        <a href="{{ url_for('logout') }}">Logout</a>
-
         <h2>Pick</h2>
         <a href="{{ url_for('pick') }}">Pick</a>
         <a href="{{ url_for('view_picks') }}">View Picks</a>
-    
+
+        <h2>Account</h2>
+        <p>You are logged in as {{ username }}</p>
+        <a href="{{ url_for('logout') }}">Logout</a>
     {% else %}
         <h2>Account</h2>
         <a href="{{ url_for('login') }}">Login</a>
