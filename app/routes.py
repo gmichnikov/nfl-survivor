@@ -217,7 +217,7 @@ def view_picks():
         wrong_picks = Pick.query.filter_by(user_id=user.id, is_correct=False).count()
         wrong_picks_count[user.username] = wrong_picks
 
-    sorted_users = sorted(users, key=lambda user: (wrong_picks_count.get(user.username, 0), user.username))    
+    sorted_users = sorted(users, key=lambda user: (wrong_picks_count.get(user.username, 0), user.username.lower()))
     usernames = [user.username for user in sorted_users]
 
     for week in range(1, calculate_current_week()):
