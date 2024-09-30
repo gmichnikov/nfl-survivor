@@ -209,12 +209,17 @@ def pick():
 def view_picks():
     all_picks = {}
     wrong_picks_count = {}
-    users = User.query.order_by(User.username).all()  # Sort users by username
-    usernames = [user.username for user in users]
+    users = User.query.all()
 
-    # Convert team IDs to names
     team_lookup = {team['id']: team['name'] for team in load_nfl_teams()}
-    
+
+    for user in users:
+        wrong_picks = Pick.query.filter_by(user_id=user.id, is_correct=False).count()
+        wrong_picks_count[user.username] = wrong_picks
+
+    sorted_users = sorted(users, key=lambda user: (wrong_picks_count.get(user.username, 0), user.username))    
+    usernames = [user.username for user in sorted_users]
+
     for week in range(1, calculate_current_week()):
         all_picks[week] = {}
         picks_for_week = Pick.query.filter_by(week=week).all()
@@ -224,10 +229,6 @@ def view_picks():
             username = user.username
             team_name = team_lookup.get(pick.team, pick.team)
             all_picks[week][username] = {'team': team_name, 'is_correct': pick.is_correct}
-
-            # Count wrong picks
-            if pick.is_correct is False:
-                wrong_picks_count[username] = wrong_picks_count.get(username, 0) + 1
 
     return render_template('view_picks.html', all_picks=all_picks, usernames=usernames, wrong_picks_count=wrong_picks_count)
 
