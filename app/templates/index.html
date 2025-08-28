@@ -1,74 +1,76 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>NFL Survivor Pool 2024</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
+      body {
+        font-size: 16px; /* Adjust as needed */
+        padding: 10px;
+        text-align: center; /* Center content */
+      }
+      a {
+        display: inline-block;
+        margin: 5px;
+        padding: 10px;
+        background-color: #f0f0f0; /* Light grey background */
+        border-radius: 5px; /* Rounded corners */
+        text-decoration: none; /* No underline */
+        color: black; /* Black text */
+        transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
+      }
+      a:hover {
+        background-color: #e0e0e0; /* Slightly darker grey on hover */
+        color: #333; /* Darker text color on hover */
+      }
+      @media (max-width: 600px) {
         body {
-            font-size: 16px; /* Adjust as needed */
-            padding: 10px;
-            text-align: center; /* Center content */
+          font-size: 18px; /* Larger font size on smaller screens */
         }
         a {
-            display: inline-block;
-            margin: 5px;
-            padding: 10px;
-            background-color: #f0f0f0; /* Light grey background */
-            border-radius: 5px; /* Rounded corners */
-            text-decoration: none; /* No underline */
-            color: black; /* Black text */
-            transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
+          width: 90%; /* Full width links on smaller screens */
+          margin: 10px 0; /* More space around links */
         }
-        a:hover {
-            background-color: #e0e0e0; /* Slightly darker grey on hover */
-            color: #333; /* Darker text color on hover */
-        }
-        @media (max-width: 600px) {
-            body {
-                font-size: 18px; /* Larger font size on smaller screens */
-            }
-            a {
-                width: 90%; /* Full width links on smaller screens */
-                margin: 10px 0; /* More space around links */
-            }
-        }
+      }
     </style>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
     <h1>NFL Survivor Pool 2024</h1>
 
     {% if logged_in %}
-        <h2>Pick</h2>
-        <a href="{{ url_for('pick') }}">Pick</a>
-        <a href="{{ url_for('view_picks') }}">View Picks</a>
+    <h2>Pick</h2>
+    <a href="{{ url_for('pick') }}">Pick</a>
+    <a href="{{ url_for('view_picks') }}">View Picks</a>
 
-        <h2>Account</h2>
-        <p>You are logged in as {{ username }}</p>
-        <a href="{{ url_for('logout') }}">Logout</a>
+    <h2>Account</h2>
+    <p>You are logged in as {{ username }}</p>
+    <a href="{{ url_for('logout') }}">Logout</a>
     {% else %}
-        <h2>Account</h2>
-        <a href="{{ url_for('login') }}">Login</a>
-        <a href="{{ url_for('register') }}">Register</a>
+    <h2>Account</h2>
+    <a href="{{ url_for('login') }}">Login</a>
+    <a href="{{ url_for('register') }}">Register</a>
+    {% endif %} {% if logged_in and current_user.is_admin %}
+    <h2>Set Picks</h2>
+    <a href="{{ url_for('admin_set_pick') }}">Manually Set a Pick</a>
+    <a href="{{ url_for('admin_auto_pick') }}">Auto Pick for Week</a>
+    <h2>Set Results</h2>
+    <a href="{{ url_for('admin') }}">Manually</a>
+    <a href="{{ url_for('auto_update') }}">Auto Update</a>
+    <h2>Spreads</h2>
+    <a href="{{ url_for('fetch_spreads') }}">Fetch Spreads</a>
+    <a href="{{ url_for('all_spreads') }}">All Spreads</a>
+    <h2>Other</h2>
+    <a href="{{ url_for('view_logs') }}">View Logs</a>
+    <a href="{{ url_for('admin_view_all_picks') }}">View All Picks</a>
+    <a href="{{ url_for('admin_reset_password') }}">Reset Passwords</a>
+    <a href="{{ url_for('admin_view_weekly_results') }}">View Weekly Results</a>
+    <a href="{{ url_for('admin_view_users') }}">View All Users</a>
+    <a href="{{ url_for('admin_generate_reset_code') }}">Generate Reset Code</a>
     {% endif %}
-
-    {% if logged_in and current_user.is_admin %}
-        <h2>Set Picks</h2>
-        <a href="{{ url_for('admin_set_pick') }}">Manually Set a Pick</a> 
-        <a href="{{ url_for('admin_auto_pick') }}">Auto Pick for Week</a>
-        <h2>Set Results</h2>
-        <a href="{{ url_for('admin') }}">Manually</a>
-        <a href="{{ url_for('auto_update') }}">Auto Update</a>
-        <h2>Spreads</h2>
-        <a href="{{ url_for('fetch_spreads') }}">Fetch Spreads</a>
-        <a href="{{ url_for('all_spreads') }}">All Spreads</a>
-        <h2>Other</h2>
-        <a href="{{ url_for('view_logs') }}">View Logs</a>
-        <a href="{{ url_for('admin_view_all_picks') }}">View All Picks</a>
-        <a href="{{ url_for('admin_reset_password') }}">Reset Passwords</a>
-        <a href="{{ url_for('admin_view_weekly_results') }}">View Weekly Results</a>
-        <a href="{{ url_for('admin_view_users') }}">View All Users</a>
-        <a href="{{ url_for('admin_generate_reset_code') }}">Generate Reset Code</a>
-    {% endif %}
-</body>
+  </body>
 </html>
