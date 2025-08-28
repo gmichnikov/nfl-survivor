@@ -33,6 +33,11 @@ def register():
         
         new_user = User(username=form.username.data)
         new_user.set_password(form.password.data)
+        
+        # Check if username matches admin username from environment variable
+        from config import ADMIN_USERNAME
+        if ADMIN_USERNAME and form.username.data == ADMIN_USERNAME:
+            new_user.is_admin = True
 
         db.session.add(new_user)
         db.session.commit()
@@ -41,10 +46,18 @@ def register():
         eastern = pytz.timezone('US/Eastern')
         log_time = datetime.now().astimezone(pytz.utc)
 
+        action_type = "register"
+        description = f"{new_user.username} registered"
+        
+        # Add special logging for admin user creation
+        if new_user.is_admin:
+            action_type = "admin_register"
+            description = f"{new_user.username} registered as admin user"
+
         new_log = Logs(timestamp=log_time,
                       user_id=new_user.id,
-                      action_type="register",
-                      description=f"{new_user.username} registered")
+                      action_type=action_type,
+                      description=description)
         
         db.session.add(new_log)
 
