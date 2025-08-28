@@ -365,7 +365,7 @@ def fetch_spreads():
         flash('You do not have permission to access this page.')
         return redirect(url_for('index'))
 
-    first_week_start_date = datetime(2024, 9, 5)
+    first_week_start_date = datetime(2025, 9, 4)
     current_week = calculate_current_week()
     days_shift = (current_week - 1) * 7
     commenceTimeFrom = datetime.now().astimezone(pytz.utc)
@@ -552,7 +552,7 @@ def update_weekly_results(week, results):
     db.session.commit()
 
 def fetch_results_for_week(week):
-    url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2024&seasontype=2&week={week}"
+    url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2025&seasontype=2&week={week}"
     response = requests.get(url)
     data = response.json()
 

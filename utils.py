@@ -16,7 +16,7 @@ def load_nfl_teams_as_pairs():
 def calculate_current_week():
     eastern = pytz.timezone('US/Eastern')
 
-    first_week_deadline = eastern.localize(datetime(2024, 9, 8, 13, 0))
+    first_week_deadline = eastern.localize(datetime(2025, 9, 7, 13, 0))
     now = datetime.now().astimezone(eastern)
 
     # datetime.now().astimezone(pytz.utc) maybe try this
@@ -31,7 +31,7 @@ def calculate_current_week():
 def get_ongoing_week():
     eastern = pytz.timezone('US/Eastern')
 
-    first_week_deadline = eastern.localize(datetime(2024, 9, 10, 5, 0))
+    first_week_deadline = eastern.localize(datetime(2025, 9, 9, 5, 0))
     now = datetime.now().astimezone(eastern)
 
     if now < first_week_deadline:
@@ -41,7 +41,7 @@ def get_ongoing_week():
     return result
 
 def calculate_game_week(game_time_utc):
-    week_one_cutoff = datetime(2024, 9, 11, tzinfo=pytz.utc)
+    week_one_cutoff = datetime(2025, 9, 10, tzinfo=pytz.utc)
     
     if game_time_utc < week_one_cutoff:
         return 1
