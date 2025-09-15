@@ -807,3 +807,52 @@ def user_reset_password():
             flash('Invalid or expired reset code.')
 
     return render_template('user_reset_password.html', form=form)
+
+@app.route('/admin_delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def admin_delete_user(user_id):
+    if not current_user.is_admin:
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('index'))
+
+    user_to_delete = User.query.get_or_404(user_id)
+    
+    # Prevent admin from deleting themselves
+    if user_to_delete.id == current_user.id:
+        flash('You cannot delete your own account.')
+        return redirect(url_for('admin_view_users'))
+    
+    # Store username for logging before deletion
+    username_to_delete = user_to_delete.username
+    
+    try:
+        # Delete all associated data in cascading manner
+        # Delete all picks for this user
+        Pick.query.filter_by(user_id=user_id).delete()
+        
+        # Delete all logs for this user
+        Logs.query.filter_by(user_id=user_id).delete()
+        
+        # Delete all reset codes for this user
+        ResetCode.query.filter_by(user_id=user_id).delete()
+        
+        # Finally delete the user
+        db.session.delete(user_to_delete)
+        
+        # Log the deletion action
+        log_entry = Logs(
+            timestamp=datetime.now().astimezone(pytz.utc),
+            user_id=current_user.id,
+            action_type="delete user",
+            description=f"{current_user.username} deleted user {username_to_delete} and all associated data"
+        )
+        db.session.add(log_entry)
+        
+        db.session.commit()
+        flash(f'User {username_to_delete} and all associated data have been deleted successfully.')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting user: {str(e)}')
+    
+    return redirect(url_for('admin_view_users'))
