@@ -338,7 +338,7 @@ def admin_set_pick():
         return redirect(url_for('index'))
 
     form = AdminSetPickForm()
-    form.username.choices = [(user.username, user.username) for user in User.query.all()]
+    form.username.choices = [(user.username, user.username) for user in sorted(User.query.all(), key=lambda user: user.username.lower())]
     form.team.choices = load_nfl_teams_as_pairs()
 
     if form.validate_on_submit():

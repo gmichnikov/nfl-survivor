@@ -1,21 +1,22 @@
 <h1>Admin: Set User Pick</h1>
 <form action="{{ url_for('admin_set_pick') }}" method="post">
-    {{ form.hidden_tag() }}
-    <p>
-        {{ form.username.label }}<br>
-        {{ form.username() }}
-    </p>
-    <p>
-        {{ form.week.label }}<br>
-        {{ form.week() }}
-    </p>
-    <p>
-        {{ form.team.label }}<br>
-        {{ form.team() }}
-    </p>
-    <p>{{ form.submit() }}</p>
+  {{ form.hidden_tag() }}
+  <p>
+    {{ form.username.label }}<br />
+    {{ form.username() }}
+  </p>
+  <p>
+    {{ form.week.label }}<br />
+    {{ form.week() }}
+  </p>
+  <p>
+    {{ form.team.label }}<br />
+    {{ form.team() }}
+  </p>
+  <p>{{ form.submit() }}</p>
 </form>
 
-<br>
+<br />
 <a href="{{ url_for('index') }}">Home</a> |
+<a href="{{ url_for('view_picks') }}">View Picks</a> |
 <a href="{{ url_for('view_logs') }}">View Logs</a>
