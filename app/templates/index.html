@@ -53,8 +53,9 @@
     {% else %}
     <h2>Account</h2>
     <a href="{{ url_for('login') }}">Login</a>
+    {% if registration_open %}
     <a href="{{ url_for('register') }}">Register</a>
-    {% endif %} {% if logged_in and current_user.is_admin %}
+    {% endif %} {% endif %} {% if logged_in and current_user.is_admin %}
     <h2>Set Picks</h2>
     <a href="{{ url_for('admin_set_pick') }}">Manually Set a Pick</a>
     <a href="{{ url_for('admin_auto_pick') }}">Auto Pick for Week</a>

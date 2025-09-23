@@ -4,6 +4,10 @@ from datetime import datetime, time, timedelta
 import pytz
 from app.models import WeeklyResult
 
+# Season registration cutoff - no new registrations after this date
+eastern = pytz.timezone('US/Eastern')
+FIRST_WEEK_END = eastern.localize(datetime(2025, 9, 9, 5, 0))
+
 def load_nfl_teams():
     with open('data/nfl_teams.json', 'r') as json_file:
         nfl_teams = json.load(json_file)
@@ -29,15 +33,12 @@ def calculate_current_week():
 
 # this defines weeks as 5am Tues, where week 2 starts on the Tues after Week 1's MNF, used to see who needs to pick
 def get_ongoing_week():
-    eastern = pytz.timezone('US/Eastern')
-
-    first_week_deadline = eastern.localize(datetime(2025, 9, 9, 5, 0))
     now = datetime.now().astimezone(eastern)
 
-    if now < first_week_deadline:
+    if now < FIRST_WEEK_END:
         return 1
 
-    result = 2 + ((now - first_week_deadline).days // 7)
+    result = 2 + ((now - FIRST_WEEK_END).days // 7)
     return result
 
 def calculate_game_week(game_time_utc):

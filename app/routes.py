@@ -3,7 +3,7 @@ from app import app, db, login_manager
 from app.models import User, Pick, WeeklyResult, Logs, Spread, ResetCode
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms import RegistrationForm, LoginForm, TeamSelectionForm, AdminPasswordResetForm, AdminSetPickForm, AdminGenerateResetCodeForm, UserResetPasswordForm
-from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict, calculate_game_week, get_ongoing_week
+from utils import load_nfl_teams, load_nfl_teams_as_pairs, calculate_current_week, is_pick_correct, load_nfl_teams_as_dict, calculate_game_week, get_ongoing_week, FIRST_WEEK_END
 from datetime import datetime, timedelta
 import pytz
 from pytz import timezone
@@ -16,14 +16,27 @@ import secrets
 
 @app.route('/')
 def index():
+    # Check if registration is still allowed (before first week end)
+    eastern = pytz.timezone('US/Eastern')
+    now = datetime.now().astimezone(eastern)
+    registration_open = now < FIRST_WEEK_END
+    
     if current_user.is_authenticated:
         username = current_user.username
-        return render_template('index.html', logged_in=True, username=username)
+        return render_template('index.html', logged_in=True, username=username, registration_open=registration_open)
     else:
-        return render_template('index.html', logged_in=False)
+        return render_template('index.html', logged_in=False, registration_open=registration_open)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    # Check if registration is still allowed (before first week end)
+    eastern = pytz.timezone('US/Eastern')
+    now = datetime.now().astimezone(eastern)
+    
+    if now >= FIRST_WEEK_END:
+        flash('Registration is closed. The season has already started.')
+        return redirect(url_for('login'))
+    
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
