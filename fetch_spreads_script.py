@@ -8,6 +8,10 @@ import requests
 import sys
 from datetime import datetime
 import pytz
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def fetch_spreads():
     """Call the fetch_spreads API endpoint"""
