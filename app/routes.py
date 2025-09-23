@@ -390,7 +390,21 @@ def fetch_spreads():
     if not current_user.is_admin:
         flash('You do not have permission to access this page.')
         return redirect(url_for('index'))
+    
+    return fetch_spreads_data()
 
+@app.route('/api/fetch_spreads', methods=['GET'])
+def api_fetch_spreads():
+    """API endpoint for automated fetching - requires API key"""
+    api_key = request.headers.get('X-API-Key')
+    expected_key = os.environ.get('FETCH_SPREADS_API_KEY')
+    
+    if not api_key or api_key != expected_key:
+        return {'error': 'Invalid API key'}, 401
+    
+    return fetch_spreads_data()
+
+def fetch_spreads_data():
     first_week_start_date = datetime(2025, 9, 4)
     current_week = calculate_current_week()
     days_shift = (current_week - 1) * 7
@@ -411,10 +425,13 @@ def fetch_spreads():
         'commenceTimeTo': commenceTimeTo_str
     })
 
-
     if odds_response.status_code != 200:
-        flash(f'Failed to get odds: status_code {odds_response.status_code}, response body {odds_response.text}')
-        return redirect(url_for('index'))
+        error_msg = f'Failed to get odds: status_code {odds_response.status_code}, response body {odds_response.text}'
+        if request.endpoint == 'fetch_spreads':
+            flash(error_msg)
+            return redirect(url_for('index'))
+        else:
+            return {'error': error_msg}, 500
 
     odds_json = odds_response.json()
     for game in odds_json:
@@ -480,9 +497,9 @@ def fetch_spreads():
     eastern = pytz.timezone('US/Eastern')
     log_entry = Logs(
         timestamp=datetime.now().astimezone(pytz.utc),
-        user_id=current_user.id,
+        user_id=current_user.id if current_user.is_authenticated else None,
         action_type="fetch_spreads",
-        description=f"{current_user.username} fetched spreads for week {current_week}"
+        description=f"{'Automated' if not current_user.is_authenticated else current_user.username} fetched spreads for week {current_week}"
     )
     db.session.add(log_entry)
     db.session.commit()
@@ -507,12 +524,21 @@ def fetch_spreads():
 
     last_updated_time = utc.localize(last_updated_time).astimezone(eastern)
 
-    return render_template('fetch_spreads.html', 
-                           spreads=spreads, 
-                           last_updated_time=last_updated_time, 
-                           current_week=current_week, 
-                           remaining_requests=remaining_requests, 
-                           used_requests=used_requests)
+    if request.endpoint == 'fetch_spreads':
+        return render_template('fetch_spreads.html', 
+                               spreads=spreads, 
+                               last_updated_time=last_updated_time, 
+                               current_week=current_week, 
+                               remaining_requests=remaining_requests, 
+                               used_requests=used_requests)
+    else:
+        return {
+            'success': True,
+            'message': f'Successfully fetched spreads for week {current_week}',
+            'remaining_requests': remaining_requests,
+            'used_requests': used_requests,
+            'last_updated_time': last_updated_time.isoformat()
+        }
 
 @app.route('/auto-update', methods=['GET', 'POST'])
 @login_required

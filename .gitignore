@@ -13,3 +13,5 @@ testing.py
 db_backup
 
 *.zip
+
+AUTOMATION_SETUP.md
